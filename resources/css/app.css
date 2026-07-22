@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --color-paper: #FAF9F7;
+        --color-surface: #EDEAE4;
+        --color-ash: #9C9690;
+        --color-ink: #1C1A18;
+        --color-ink-soft: #3A3733;
+        --color-gold: #B89B6B;
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #FAF9F7;
+        color: #3A3733;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        color: #1C1A18;
+    }
+}
+
+.font-display {
+    font-family: 'Cormorant Garamond', serif;
+}
+
+.font-body {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Hide native browser password reveal eye icons and overlays */
+input::-ms-reveal,
+input::-ms-clear {
+    display: none !important;
+}
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+    visibility: hidden !important;
+    display: none !important;
+    pointer-events: none;
+}
