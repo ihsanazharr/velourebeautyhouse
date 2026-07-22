@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Kirim semua trafik root (domain utama) ke folder public
+    RewriteRule ^$ public/ [L]
+    
+    # Kirim semua trafik sub-URL ke folder public jika belum diarahkan ke sana
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
