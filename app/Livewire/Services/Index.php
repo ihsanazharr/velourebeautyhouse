@@ -17,6 +17,16 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function toggleActive(int $id): void
+    {
+        $service = Service::findOrFail($id);
+        $service->update([
+            'is_active' => !$service->is_active
+        ]);
+
+        session()->flash('success', 'Status aktif layanan "' . $service->name . '" berhasil diperbarui.');
+    }
+
     public function render()
     {
         $services = Service::query()

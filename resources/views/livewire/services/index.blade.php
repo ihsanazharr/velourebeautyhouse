@@ -80,21 +80,22 @@
                             {{ $service->commission_rate }}%
                         </td>
                         <td class="p-4">
-                            @if($service->is_active)
-                                <span
-                                    class="font-body text-xs tracking-[0.1em] uppercase px-3 py-1.5 inline-block"
-                                    style="background: #EAF1EA; color: #5C7A5C;"
+                            <div class="flex items-center gap-3">
+                                <button 
+                                    type="button" 
+                                    wire:click="toggleActive({{ $service->id }})" 
+                                    class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-0"
+                                    style="background-color: {{ $service->is_active ? '#5C7A5C' : '#EDEAE4' }};"
                                 >
-                                    Aktif
+                                    <span 
+                                        class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                                        style="transform: translateX({{ $service->is_active ? '16px' : '0px' }});"
+                                    ></span>
+                                </button>
+                                <span class="font-body text-xs {{ $service->is_active ? 'text-[#5C7A5C]' : 'text-[#9C9690]' }}" style="font-weight: 500;">
+                                    {{ $service->is_active ? 'Aktif' : 'Nonaktif' }}
                                 </span>
-                            @else
-                                <span
-                                    class="font-body text-xs tracking-[0.1em] uppercase px-3 py-1.5 inline-block"
-                                    style="background: #EDEAE4; color: #9C9690;"
-                                >
-                                    Nonaktif
-                                </span>
-                            @endif
+                            </div>
                         </td>
                         <td class="p-4">
                             <a
