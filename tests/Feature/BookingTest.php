@@ -62,6 +62,8 @@ class BookingTest extends TestCase
         Livewire::actingAs($owner)
             ->test(\App\Livewire\Bookings\Create::class)
             ->set('customer_id', $customer->id)
+            ->set('customer_name', $customer->name)
+            ->set('customer_phone', $customer->phone)
             ->set('service_id', $service->id)
             ->set('employee_id', $employee->id)
             ->set('booking_date', now()->toDateString())
@@ -146,6 +148,8 @@ class BookingTest extends TestCase
         Livewire::actingAs($owner)
             ->test(\App\Livewire\Bookings\Create::class)
             ->set('customer_id', $customer->id)
+            ->set('customer_name', $customer->name)
+            ->set('customer_phone', $customer->phone)
             ->set('service_id', $service->id)
             ->set('employee_id', $employee->id)
             ->set('booking_date', $today)
@@ -256,5 +260,83 @@ class BookingTest extends TestCase
         $this->assertEquals(60000, (float) $bookingService->commission_amount);
         $this->assertEquals(120, $bookingService->duration_minutes);
         $this->assertEquals($today . ' 12:00:00', $bookingService->end_time->format('Y-m-d H:i:s'));
+    }
+
+    public function test_can_create_walkin_booking_without_existing_account()
+    {
+        $owner = User::factory()->create();
+        $owner->assignRole('owner');
+
+        $category = ServiceCategory::create([
+            'name' => 'Hair Services',
+            'slug' => 'hair-services',
+            'is_active' => true,
+        ]);
+
+        $service = Service::create([
+            'service_category_id' => $category->id,
+            'name' => 'Haircut',
+            'price' => 100000,
+            'duration_minutes' => 60,
+            'is_active' => true,
+        ]);
+
+        $employee = Employee::create([
+            'employee_code' => 'EMP-01',
+            'full_name' => 'Jane Stylist',
+            'phone' => '0812345679',
+            'commission_percentage' => 10,
+            'basic_salary' => 3000000,
+            'employment_status' => 'active',
+        ]);
+
+        $this->assertEquals(0, Customer::count());
+
+        Livewire::actingAs($owner)
+            ->test(\App\Livewire\Bookings\Create::class)
+            ->set('customer_name', 'Guest User')
+            ->set('customer_phone', '08987654321')
+            ->set('service_id', $service->id)
+            ->set('employee_id', $employee->id)
+            ->set('booking_date', now()->toDateString())
+            ->set('booking_time', '12:00')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('owner.bookings.index'));
+
+        // Verify a new customer was created for the guest
+        $this->assertEquals(1, Customer::count());
+        $customer = Customer::first();
+        $this->assertEquals('Guest User', $customer->name);
+        $this->assertEquals('08987654321', $customer->phone);
+
+        // Verify the booking is linked to the newly created customer
+        $booking = Booking::first();
+        $this->assertNotNull($booking);
+        $this->assertEquals($customer->id, $booking->customer_id);
+    }
+
+    public function test_can_get_customer_suggestions_when_typing_name()
+    {
+        $owner = User::factory()->create();
+        $owner->assignRole('owner');
+
+        $customer = Customer::create([
+            'name' => 'Alice Margatroid',
+            'phone' => '0812345678',
+            'email' => 'alice@example.com',
+            'is_active' => true,
+        ]);
+
+        Livewire::actingAs($owner)
+            ->test(\App\Livewire\Bookings\Create::class)
+            ->set('customer_name', 'Alic')
+            ->assertSet('customer_id', '')
+            ->assertCount('customer_suggestions', 1)
+            ->call('selectCustomer', $customer->id, $customer->name, $customer->phone)
+            ->assertSet('customer_id', $customer->id)
+            ->assertSet('customer_name', 'Alice Margatroid')
+            ->assertSet('customer_phone', '0812345678')
+            ->assertCount('customer_suggestions', 0);
     }
 }

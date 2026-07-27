@@ -16,6 +16,12 @@ class Create extends Component
 {
     public string $customer_id = '';
 
+    public string $customer_name = '';
+
+    public string $customer_phone = '';
+
+    public array $customer_suggestions = [];
+
     public string $service_id = '';
 
     public string $employee_id = '';
@@ -26,33 +32,58 @@ class Create extends Component
 
     public ?string $notes = null;
 
+    public function updatedCustomerName(): void
+    {
+        $this->customer_id = ''; 
+        
+        if (strlen($this->customer_name) >= 1) {
+            $this->customer_suggestions = Customer::query()
+                ->where('is_active', true)
+                ->where('name', 'like', '%' . $this->customer_name . '%')
+                ->take(5)
+                ->get()
+                ->toArray();
+        } else {
+            $this->customer_suggestions = [];
+        }
+    }
+
+    public function selectCustomer(string $id, string $name, string $phone): void
+    {
+        $this->customer_id = $id;
+        $this->customer_name = $name;
+        $this->customer_phone = $phone;
+        $this->customer_suggestions = [];
+    }
+
     public function save()
     {
         $validated = $this->validate([
-            'customer_id' => [
+            'customer_name' => [
                 'required',
-                'exists:customers,id'
+                'string',
+                'max:255',
             ],
-
+            'customer_phone' => [
+                'nullable',
+                'string',
+                'max:20',
+            ],
             'service_id' => [
                 'required',
                 'exists:services,id'
             ],
-
             'employee_id' => [
                 'required',
                 'exists:employees,id'
             ],
-
             'booking_date' => [
                 'required',
                 'date'
             ],
-
             'booking_time' => [
                 'required'
             ],
-
             'notes' => [
                 'nullable'
             ],
@@ -80,9 +111,28 @@ class Create extends Component
         }
 
         DB::transaction(function () use ($validated, $service, $start, $end) {
+            $customerId = $this->customer_id;
+
+            if (empty($customerId)) {
+                // Find or create customer by name and phone to prevent duplicate guest accounts
+                $phone = $this->customer_phone ?: '080000000000';
+                $customer = Customer::where('name', $this->customer_name)
+                    ->where('phone', $phone)
+                    ->first();
+
+                if (!$customer) {
+                    $customer = Customer::create([
+                        'name' => $this->customer_name,
+                        'phone' => $phone,
+                        'is_active' => true,
+                    ]);
+                }
+                $customerId = $customer->id;
+            }
+
             $booking = Booking::create([
                 'booking_number' => 'BK-' . now()->format('YmdHis'),
-                'customer_id' => $validated['customer_id'],
+                'customer_id' => $customerId,
                 'booking_date' => $validated['booking_date'],
                 'booking_start' => $start,
                 'booking_end' => $end,
@@ -94,7 +144,7 @@ class Create extends Component
 
             BookingCustomer::create([
                 'booking_id' => $booking->id,
-                'customer_id' => $validated['customer_id'],
+                'customer_id' => $customerId,
             ]);
 
             $employee = Employee::findOrFail($validated['employee_id']);
@@ -119,9 +169,11 @@ class Create extends Component
             'Booking berhasil dibuat.'
         );
 
-        return redirect()->route(
-            'owner.bookings.index'
-        );
+        $routeName = auth()->user()->hasRole('owner') 
+            ? 'owner.bookings.index' 
+            : 'kasir.bookings.index';
+
+        return redirect()->route($routeName);
     }
 
     public function render()
@@ -129,11 +181,6 @@ class Create extends Component
         return view(
             'livewire.bookings.create',
             [
-                'customers' => Customer::query()
-                    ->where('is_active', true)
-                    ->orderBy('name')
-                    ->get(),
-
                 'services' => Service::query()
                     ->where('is_active', true)
                     ->orderBy('name')

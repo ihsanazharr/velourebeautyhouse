@@ -41,29 +41,53 @@
 
         <div class="bg-white border p-8 max-w-2xl" style="border-color:#EDEAE4;">
 
-            <div class="mb-6">
+            <div class="mb-6 relative" x-data="{ open: true }" @click.away="open = false">
 
-                <label>Customer</label>
+                <label>Nama Pelanggan (Walk-In / Terdaftar)</label>
 
-                <select
-                    wire:model="customer_id"
+                <input
+                    type="text"
+                    wire:model.live="customer_name"
+                    placeholder="Ketik nama pelanggan..."
+                    @focus="open = true"
+                    autocomplete="off"
                 >
 
-                    <option value="">
-                        Pilih Customer
-                    </option>
+                @if(!empty($customer_suggestions))
+                    <div 
+                        x-show="open" 
+                        class="absolute z-50 left-0 right-0 mt-1 bg-white border shadow-lg max-h-60 overflow-y-auto"
+                        style="border-color: #EDEAE4;"
+                    >
+                        @foreach($customer_suggestions as $suggestion)
+                            <div
+                                wire:click="selectCustomer('{{ $suggestion['id'] }}', '{{ $suggestion['name'] }}', '{{ $suggestion['phone'] }}')"
+                                @click="open = false"
+                                class="p-3 font-body text-sm cursor-pointer transition-colors duration-200 hover:bg-[#FAF9F7]"
+                                style="border-bottom: 1px solid #EDEAE4;"
+                            >
+                                <div class="font-semibold text-[#1C1A18]">{{ $suggestion['name'] }}</div>
+                                <div class="text-xs text-[#9C9690]">{{ $suggestion['phone'] }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+                
+                <x-input-error :messages="$errors->get('customer_name')" class="mt-2" />
 
-                    @foreach($customers as $customer)
+            </div>
 
-                        <option
-                            value="{{ $customer->id }}"
-                        >
-                            {{ $customer->name }}
-                        </option>
+            <div class="mb-6">
 
-                    @endforeach
+                <label>Nomor WhatsApp / HP (Opsional)</label>
 
-                </select>
+                <input
+                    type="text"
+                    wire:model="customer_phone"
+                    placeholder="Contoh: 081234567890"
+                >
+                
+                <x-input-error :messages="$errors->get('customer_phone')" class="mt-2" />
 
             </div>
 
