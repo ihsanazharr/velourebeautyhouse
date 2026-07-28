@@ -166,6 +166,11 @@ new class extends Component
                         </div>
                     </div>
 
+                    <a href="{{ route('owner.settings.edit') }}" wire:navigate
+                        class="nav-item font-body text-xs tracking-[0.12em] uppercase px-3 h-full flex items-center border-b-2 transition-all duration-200 {{ request()->routeIs('owner.settings.*') ? 'border-[#B89B6B] text-[#1C1A18]' : 'border-transparent text-[#9C9690] hover:text-[#1C1A18]' }}">
+                        Pengaturan
+                    </a>
+
                     @endrole
 
                     {{-- ==================== KASIR NAV ==================== --}}
@@ -301,6 +306,8 @@ new class extends Component
             <x-responsive-nav-link :href="route('owner.invoices.index')" wire:navigate>Invoice</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('owner.payment-proofs.index')" wire:navigate>Pembayaran</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('owner.reports.index')" wire:navigate>Laporan</x-responsive-nav-link>
+            <p class="font-body text-[10px] tracking-[0.2em] uppercase px-3 py-2 mt-2" style="color:#B89B6B;">Sistem</p>
+            <x-responsive-nav-link :href="route('owner.settings.edit')" wire:navigate>Pengaturan</x-responsive-nav-link>
             @endrole
 
             @role('kasir')

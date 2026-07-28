@@ -169,6 +169,10 @@ Route::prefix('owner')
                 ReportIndex::class
             )->name('reports.index');
 
+            Route::get(
+                '/settings',
+                \App\Livewire\Owner\Settings::class
+            )->name('settings.edit');
         });
 
         /*

@@ -69,13 +69,22 @@
                             </p>
                         </div>
 
+                        @php $setting = \App\Models\Setting::first(); @endphp
                         <div class="relative">
                             <div class="aspect-[4/3] w-full overflow-hidden border" style="border-color: var(--color-surface); border-radius: 12px; background-color: white;">
-                                <img 
-                                    src="https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80" 
-                                    alt="Veloure Beauty House Interior" 
-                                    class="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                                >
+                                @if($setting && $setting->hero_image)
+                                    <img 
+                                        src="{{ asset('storage/' . $setting->hero_image) }}" 
+                                        alt="{{ $setting->company_name }}" 
+                                        class="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                                    >
+                                @else
+                                    <img 
+                                        src="https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80" 
+                                        alt="Veloure Beauty House Interior" 
+                                        class="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                                    >
+                                @endif
                             </div>
                             <div class="absolute -bottom-6 -left-6 w-32 h-32 border hidden lg:block" style="border-color: var(--color-gold); border-radius: 12px; z-index: -1;"></div>
                         </div>
