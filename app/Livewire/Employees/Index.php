@@ -26,7 +26,7 @@ class Index extends Component
                 fn ($query) =>
                 $query->where(
                     'full_name',
-                    'ilike',
+                    'like',
                     '%' . $this->search . '%'
                 )
             )

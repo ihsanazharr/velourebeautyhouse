@@ -23,7 +23,7 @@ class Index extends Component
                 fn ($query) =>
                 $query->where(
                     'booking_number',
-                    'ilike',
+                    'like',
                     '%' . $this->search . '%'
                 )
             )
