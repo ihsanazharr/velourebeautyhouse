@@ -52,89 +52,62 @@ class Create extends Component
 
     public function save()
     {
-        $validated = $this->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
-
-            'email' => ['required', 'email', 'unique:users,email'],
-
-            'password' => ['required', 'min:8'],
-
             'role' => [
                 'required',
                 'in:kasir,hairstylist,nailist_senior,nailist_junior'
             ],
-
             'phone' => ['nullable', 'max:30'],
-
             'birth_date' => ['nullable', 'date'],
-
             'address' => ['nullable'],
-
             'hire_date' => ['required', 'date'],
-
             'basic_salary' => ['required', 'numeric', 'min:0'],
-
             'meal_allowance' => ['required', 'numeric', 'min:0'],
-
             'overtime_rate' => ['required', 'numeric', 'min:0'],
-
             'employment_status' => [
                 'required',
                 'in:active,inactive,resigned'
             ],
-        ]);
+        ];
+
+        if ($this->role === 'kasir') {
+            $rules['email'] = ['required', 'email', 'unique:users,email'];
+            $rules['password'] = ['required', 'min:8'];
+        }
+
+        $validated = $this->validate($rules);
 
         DB::transaction(function () use ($validated) {
+            $userId = null;
 
-            $user = User::create([
-                'name' => $validated['name'],
+            if ($this->role === 'kasir') {
+                $user = User::create([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['password']),
+                ]);
 
-                'email' => $validated['email'],
+                $user->assignRole('kasir');
+                $userId = $user->id;
+            }
 
-                'password' => Hash::make(
-                    $validated['password']
-                ),
-            ]);
-
-            $user->assignRole(
-                $validated['role']
-            );
-
-            $nextNumber =
-                Employee::count() + 1;
-
-            $employeeCode =
-                'EMP-' .
-                str_pad(
-                    $nextNumber,
-                    4,
-                    '0',
-                    STR_PAD_LEFT
-                );
+            $nextNumber = Employee::count() + 1;
+            $employeeCode = 'EMP-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
             Employee::create([
-                'user_id' => $user->id,
-
+                'user_id' => $userId,
+                'role' => $validated['role'],
                 'employee_code' => $employeeCode,
-
                 'full_name' => $validated['name'],
-
                 'phone' => $validated['phone'],
-
                 'birth_date' => $validated['birth_date'],
-
                 'address' => $validated['address'],
-
                 'hire_date' => $validated['hire_date'],
-
                 'basic_salary' => $validated['basic_salary'],
-
                 'commission_percentage' => 0,
-
                 'meal_allowance' => $validated['meal_allowance'],
-
                 'overtime_rate' => $validated['overtime_rate'],
-
                 'employment_status' => $validated['employment_status'],
             ]);
         });

@@ -15,6 +15,7 @@ class Employee extends Model
 
     protected $fillable = [
         'user_id',
+        'role',
         'employee_code',
         'full_name',
         'phone',
@@ -72,7 +73,7 @@ class Employee extends Model
 
     public function getRoleNameAttribute(): ?string
     {
-        return $this->user?->roles->first()?->name;
+        return $this->role ?? $this->user?->roles->first()?->name;
     }
 
     public function getRoleLabelAttribute(): string

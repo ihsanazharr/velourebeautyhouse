@@ -56,10 +56,8 @@ class Edit extends Component
 
     public function save(): void
     {
-        $validated = $this->validate([
+        $rules = [
             'name'              => ['required', 'string', 'max:255'],
-            'email'             => ['required', 'email', 'unique:users,email,' . $this->employee->user_id],
-            'password'          => ['nullable', 'min:8'],
             'role'              => ['required', 'in:kasir,hairstylist,nailist_senior,nailist_junior'],
             'phone'             => ['nullable', 'max:30'],
             'birth_date'        => ['nullable', 'date'],
@@ -69,23 +67,54 @@ class Edit extends Component
             'meal_allowance'    => ['required', 'numeric', 'min:0'],
             'overtime_rate'     => ['required', 'numeric', 'min:0'],
             'employment_status' => ['required', 'in:active,inactive,resigned'],
-        ]);
-
-        $user = $this->employee->user;
-
-        $userPayload = [
-            'name'  => $validated['name'],
-            'email' => $validated['email'],
         ];
 
-        if (!empty($validated['password'])) {
-            $userPayload['password'] = Hash::make($validated['password']);
+        if ($this->role === 'kasir') {
+            $rules['email'] = ['required', 'email', 'unique:users,email,' . $this->employee->user_id];
+            $rules['password'] = ['nullable', 'min:8'];
         }
 
-        $user->update($userPayload);
-        $user->syncRoles([$validated['role']]);
+        $validated = $this->validate($rules);
+
+        $userId = $this->employee->user_id;
+
+        if ($this->role === 'kasir') {
+            if ($userId) {
+                // Update existing user account
+                $user = User::findOrFail($userId);
+                $userPayload = [
+                    'name'  => $validated['name'],
+                    'email' => $validated['email'],
+                ];
+                if (!empty($validated['password'])) {
+                    $userPayload['password'] = Hash::make($validated['password']);
+                }
+                $user->update($userPayload);
+                $user->syncRoles(['kasir']);
+            } else {
+                // Create new user account for cashier
+                $user = User::create([
+                    'name'     => $validated['name'],
+                    'email'    => $validated['email'],
+                    'password' => Hash::make($validated['password'] ?? 'password'),
+                ]);
+                $user->assignRole('kasir');
+                $userId = $user->id;
+            }
+        } else {
+            // Stylist role: if they had a user account, delete it
+            if ($userId) {
+                $user = User::find($userId);
+                if ($user) {
+                    $user->delete();
+                }
+                $userId = null;
+            }
+        }
 
         $this->employee->update([
+            'user_id'           => $userId,
+            'role'              => $validated['role'],
             'full_name'         => $validated['name'],
             'phone'             => $validated['phone'],
             'birth_date'        => $validated['birth_date'],
