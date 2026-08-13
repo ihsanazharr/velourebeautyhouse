@@ -92,57 +92,62 @@
             </div>
 
             <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <label class="!mb-0">Layanan & Terapis (Stylist)</label>
+                    <button 
+                        type="button" 
+                        wire:click="addService"
+                        class="font-body text-xs px-3 py-1.5 border transition-all duration-200 inline-flex items-center gap-1.5 hover:bg-[#FAF9F7]"
+                        style="color: #B89B6B; border-color: #EDEAE4; border-radius: 4px;"
+                    >
+                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        Tambah Layanan
+                    </button>
+                </div>
 
-                <label>Service</label>
+                <div class="space-y-4">
+                    @foreach($selected_services as $index => $item)
+                        <div class="flex gap-3 items-start p-4 bg-[#FAF9F7] border border-[#EDEAE4]" wire:key="service-slot-{{ $index }}" style="border-radius: 6px;">
+                            <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="!text-[10px] !mb-1 text-[#9C9690]">Layanan</label>
+                                    <select wire:model="selected_services.{{ $index }}.service_id">
+                                        <option value="">Pilih Service</option>
+                                        @foreach($services as $service)
+                                            <option value="{{ $service->id }}">
+                                                {{ $service->name }} &mdash; Rp {{ number_format($service->price) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('selected_services.'.$index.'.service_id')" class="mt-1" />
+                                </div>
+                                <div>
+                                    <label class="!text-[10px] !mb-1 text-[#9C9690]">Stylist</label>
+                                    <select wire:model="selected_services.{{ $index }}.employee_id">
+                                        <option value="">Pilih Stylist</option>
+                                        @foreach($employees as $employee)
+                                            <option value="{{ $employee->id }}">
+                                                {{ $employee->full_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('selected_services.'.$index.'.employee_id')" class="mt-1" />
+                                </div>
+                            </div>
 
-                <select
-                    wire:model="service_id"
-                >
-
-                    <option value="">
-                        Pilih Service
-                    </option>
-
-                    @foreach($services as $service)
-
-                        <option
-                            value="{{ $service->id }}"
-                        >
-                            {{ $service->name }}
-                            &mdash;
-                            Rp {{ number_format($service->price) }}
-                        </option>
-
+                            @if(count($selected_services) > 1)
+                                <button 
+                                    type="button" 
+                                    wire:click="removeService({{ $index }})"
+                                    class="text-red-500 font-body text-xs mt-6 transition-opacity hover:opacity-80"
+                                    title="Hapus Layanan"
+                                >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                </button>
+                            @endif
+                        </div>
                     @endforeach
-
-                </select>
-
-            </div>
-
-            <div class="mb-6">
-
-                <label>Employee</label>
-
-                <select
-                    wire:model="employee_id"
-                >
-
-                    <option value="">
-                        Pilih Employee
-                    </option>
-
-                    @foreach($employees as $employee)
-
-                        <option
-                            value="{{ $employee->id }}"
-                        >
-                            {{ $employee->full_name }}
-                        </option>
-
-                    @endforeach
-
-                </select>
-
+                </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">

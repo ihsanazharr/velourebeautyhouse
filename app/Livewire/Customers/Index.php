@@ -42,4 +42,19 @@ class Index extends Component
             compact('customers')
         )->layout('layouts.app');
     }
+
+    public function delete(string $id): void
+    {
+        $customer = Customer::findOrFail($id);
+
+        if ($customer->user_id) {
+            $user = \App\Models\User::find($customer->user_id);
+            if ($user) {
+                $user->delete();
+            }
+        }
+
+        $customer->delete();
+        session()->flash('success', 'Customer berhasil dihapus.');
+    }
 }

@@ -22,15 +22,26 @@ class Create extends Component
 
     public array $customer_suggestions = [];
 
-    public string $service_id = '';
-
-    public string $employee_id = '';
+    public array $selected_services = [
+        ['service_id' => '', 'employee_id' => '']
+    ];
 
     public string $booking_date = '';
 
     public string $booking_time = '';
 
     public ?string $notes = null;
+
+    public function addService(): void
+    {
+        $this->selected_services[] = ['service_id' => '', 'employee_id' => ''];
+    }
+
+    public function removeService(int $index): void
+    {
+        unset($this->selected_services[$index]);
+        $this->selected_services = array_values($this->selected_services);
+    }
 
     public function updatedCustomerName(): void
     {
@@ -69,14 +80,6 @@ class Create extends Component
                 'string',
                 'max:20',
             ],
-            'service_id' => [
-                'required',
-                'exists:services,id'
-            ],
-            'employee_id' => [
-                'required',
-                'exists:employees,id'
-            ],
             'booking_date' => [
                 'required',
                 'date'
@@ -87,34 +90,70 @@ class Create extends Component
             'notes' => [
                 'nullable'
             ],
+            'selected_services' => [
+                'required',
+                'array',
+                'min:1'
+            ],
+            'selected_services.*.service_id' => [
+                'required',
+                'exists:services,id'
+            ],
+            'selected_services.*.employee_id' => [
+                'required',
+                'exists:employees,id'
+            ],
         ]);
-
-        $service = Service::findOrFail($validated['service_id']);
 
         $start = \Carbon\Carbon::parse(
             $validated['booking_date'] . ' ' . $validated['booking_time']
         );
 
-        $end = $start->copy()->addMinutes($service->duration_minutes);
+        $services_to_create = [];
+        $current_start = $start->copy();
+        $total_price = 0;
 
-        $conflict = BookingService::query()
-            ->where('employee_id', $validated['employee_id'])
-            ->where(function ($query) use ($start, $end) {
-                $query->where('start_time', '<', $end)
-                      ->where('end_time', '>', $start);
-            })
-            ->exists();
+        foreach ($this->selected_services as $index => $item) {
+            $service = Service::findOrFail($item['service_id']);
+            $employee = Employee::findOrFail($item['employee_id']);
+            $service_end = $current_start->copy()->addMinutes($service->duration_minutes);
 
-        if ($conflict) {
-            $this->addError('employee_id', 'Stylist sudah memiliki jadwal pada jam tersebut.');
-            return;
+            // Check if stylist has a conflict during this specific range
+            $conflict = BookingService::query()
+                ->where('employee_id', $item['employee_id'])
+                ->where(function ($query) use ($current_start, $service_end) {
+                    $query->where('start_time', '<', $service_end)
+                          ->where('end_time', '>', $current_start);
+                })
+                ->exists();
+
+            if ($conflict) {
+                $this->addError("selected_services.{$index}.employee_id", "Stylist {$employee->full_name} sudah memiliki jadwal pada jam tersebut (" . $current_start->format('H:i') . " - " . $service_end->format('H:i') . ").");
+                return;
+            }
+
+            $commissionPercentage = $employee->commission_percentage;
+            $commissionAmount = $service->price * ($commissionPercentage / 100);
+
+            $services_to_create[] = [
+                'service_id' => $service->id,
+                'employee_id' => $employee->id,
+                'price' => $service->price,
+                'commission_percentage' => $commissionPercentage,
+                'commission_amount' => $commissionAmount,
+                'duration_minutes' => $service->duration_minutes,
+                'start_time' => $current_start->copy(),
+                'end_time' => $service_end->copy(),
+            ];
+
+            $total_price += $service->price;
+            $current_start = $service_end;
         }
 
-        DB::transaction(function () use ($validated, $service, $start, $end) {
+        DB::transaction(function () use ($validated, $services_to_create, $start, $current_start, $total_price) {
             $customerId = $this->customer_id;
 
             if (empty($customerId)) {
-                // Find or create customer by name and phone to prevent duplicate guest accounts
                 $phone = $this->customer_phone ?: '080000000000';
                 $customer = Customer::where('name', $this->customer_name)
                     ->where('phone', $phone)
@@ -135,9 +174,9 @@ class Create extends Component
                 'customer_id' => $customerId,
                 'booking_date' => $validated['booking_date'],
                 'booking_start' => $start,
-                'booking_end' => $end,
+                'booking_end' => $current_start,
                 'dp_amount' => 0,
-                'total_amount' => $service->price,
+                'total_amount' => $total_price,
                 'status' => 'pending',
                 'notes' => $validated['notes'],
             ]);
@@ -147,21 +186,19 @@ class Create extends Component
                 'customer_id' => $customerId,
             ]);
 
-            $employee = Employee::findOrFail($validated['employee_id']);
-            $commissionPercentage = $employee->commission_percentage;
-            $commissionAmount = $service->price * ($commissionPercentage / 100);
-
-            BookingService::create([
-                'booking_id' => $booking->id,
-                'service_id' => $service->id,
-                'employee_id' => $validated['employee_id'],
-                'price' => $service->price,
-                'commission_percentage' => $commissionPercentage,
-                'commission_amount' => $commissionAmount,
-                'duration_minutes' => $service->duration_minutes,
-                'start_time' => $start,
-                'end_time' => $end,
-            ]);
+            foreach ($services_to_create as $sData) {
+                BookingService::create([
+                    'booking_id' => $booking->id,
+                    'service_id' => $sData['service_id'],
+                    'employee_id' => $sData['employee_id'],
+                    'price' => $sData['price'],
+                    'commission_percentage' => $sData['commission_percentage'],
+                    'commission_amount' => $sData['commission_amount'],
+                    'duration_minutes' => $sData['duration_minutes'],
+                    'start_time' => $sData['start_time'],
+                    'end_time' => $sData['end_time'],
+                ]);
+            }
         });
 
         session()->flash(

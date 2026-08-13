@@ -29,6 +29,8 @@ class PublicSchedule extends Component
 
     protected string $timezone = 'Asia/Jakarta';
 
+    public ?int $selectedCategoryId = null;
+
     public function mount(): void
     {
         $this->date = Carbon::now($this->timezone)->toDateString();
@@ -61,8 +63,15 @@ class PublicSchedule extends Component
     {
         $now = Carbon::now($this->timezone);
 
+        $categories = \App\Models\ServiceCategory::query()
+            ->where('is_active', true)
+            ->whereHas('services', fn($q) => $q->where('is_active', true))
+            ->orderBy('name')
+            ->get();
+
         $services = Service::query()
             ->where('is_active', true)
+            ->when($this->selectedCategoryId, fn($q) => $q->where('service_category_id', $this->selectedCategoryId))
             ->with('category')
             ->orderBy('name')
             ->get();
@@ -105,6 +114,7 @@ class PublicSchedule extends Component
 
         return view('livewire.bookings.public-schedule', [
             'services' => $services,
+            'categories' => $categories,
             'slots' => $slots,
             'today' => $now,
         ]);

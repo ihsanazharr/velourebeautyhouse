@@ -56,6 +56,30 @@
             <span class="font-body text-xs tracking-[0.3em] uppercase" style="color: var(--color-gold);">Daftar Layanan</span>
         </div>
 
+        {{-- Categories Tabs --}}
+        @if ($categories->isNotEmpty())
+            <div class="flex flex-wrap gap-2 mb-8 border-b border-[#EDEAE4] pb-5">
+                <button 
+                    type="button" 
+                    wire:click="$set('selectedCategoryId', null)"
+                    class="font-body text-xs px-4 py-2.5 rounded-full border transition-all duration-200"
+                    style="{{ is_null($selectedCategoryId) ? 'background-color: var(--color-gold); color: white; border-color: var(--color-gold);' : 'background-color: white; color: var(--color-ink-soft); border-color: var(--color-surface);' }}"
+                >
+                    Semua
+                </button>
+                @foreach ($categories as $cat)
+                    <button 
+                        type="button" 
+                        wire:click="$set('selectedCategoryId', {{ $cat->id }})"
+                        class="font-body text-xs px-4 py-2.5 rounded-full border transition-all duration-200"
+                        style="{{ $selectedCategoryId === $cat->id ? 'background-color: var(--color-gold); color: white; border-color: var(--color-gold);' : 'background-color: white; color: var(--color-ink-soft); border-color: var(--color-surface);' }}"
+                    >
+                        {{ $cat->name }}
+                    </button>
+                @endforeach
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             @forelse ($services as $service)
                 <div class="bg-white flex flex-col group transition-all duration-300 hover:shadow-md" style="border: 1px solid var(--color-surface); border-radius: 10px; padding: 18px;">
@@ -73,8 +97,7 @@
                                 </p>
                             @endif
                         </div>
-                        <div class="flex justify-between items-center mt-3 pt-2.5 border-t border-[#FAF9F7]" style="border-top-color: var(--color-surface);">
-                            <span class="font-body text-[10px] text-[#9C9690]">Mulai dari</span>
+                        <div class="flex justify-end items-center mt-3 pt-2.5 border-t border-[#FAF9F7]" style="border-top-color: var(--color-surface);">
                             <span class="font-body text-sm font-semibold text-[#1C1A18]">
                                 Rp {{ number_format((float) $service->price, 0, ',', '.') }}
                             </span>

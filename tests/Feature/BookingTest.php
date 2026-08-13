@@ -64,8 +64,9 @@ class BookingTest extends TestCase
             ->set('customer_id', $customer->id)
             ->set('customer_name', $customer->name)
             ->set('customer_phone', $customer->phone)
-            ->set('service_id', $service->id)
-            ->set('employee_id', $employee->id)
+            ->set('selected_services', [
+                ['service_id' => $service->id, 'employee_id' => $employee->id]
+            ])
             ->set('booking_date', now()->toDateString())
             ->set('booking_time', '10:00')
             ->call('save')
@@ -150,12 +151,13 @@ class BookingTest extends TestCase
             ->set('customer_id', $customer->id)
             ->set('customer_name', $customer->name)
             ->set('customer_phone', $customer->phone)
-            ->set('service_id', $service->id)
-            ->set('employee_id', $employee->id)
+            ->set('selected_services', [
+                ['service_id' => $service->id, 'employee_id' => $employee->id]
+            ])
             ->set('booking_date', $today)
             ->set('booking_time', '10:30')
             ->call('save')
-            ->assertHasErrors(['employee_id']);
+            ->assertHasErrors(['selected_services.0.employee_id']);
     }
 
     public function test_can_edit_booking_and_recalculate_commission()
@@ -296,8 +298,9 @@ class BookingTest extends TestCase
             ->test(\App\Livewire\Bookings\Create::class)
             ->set('customer_name', 'Guest User')
             ->set('customer_phone', '08987654321')
-            ->set('service_id', $service->id)
-            ->set('employee_id', $employee->id)
+            ->set('selected_services', [
+                ['service_id' => $service->id, 'employee_id' => $employee->id]
+            ])
             ->set('booking_date', now()->toDateString())
             ->set('booking_time', '12:00')
             ->call('save')
@@ -338,5 +341,89 @@ class BookingTest extends TestCase
             ->assertSet('customer_name', 'Alice Margatroid')
             ->assertSet('customer_phone', '0812345678')
             ->assertCount('customer_suggestions', 0);
+    }
+
+    public function test_can_create_booking_with_multiple_services()
+    {
+        $owner = User::factory()->create();
+        $owner->assignRole('owner');
+
+        $customer = Customer::create([
+            'name' => 'Alice Doe',
+            'phone' => '0812345678',
+            'is_active' => true,
+        ]);
+
+        $employee1 = Employee::create([
+            'employee_code' => 'EMP-01',
+            'full_name' => 'Jane Stylist',
+            'commission_percentage' => 10,
+            'basic_salary' => 3000000,
+            'employment_status' => 'active',
+        ]);
+
+        $employee2 = Employee::create([
+            'employee_code' => 'EMP-02',
+            'full_name' => 'John Nailist',
+            'commission_percentage' => 20,
+            'basic_salary' => 3000000,
+            'employment_status' => 'active',
+        ]);
+
+        $category = ServiceCategory::create([
+            'name' => 'Hair Services',
+            'slug' => 'hair-services',
+            'is_active' => true,
+        ]);
+
+        $service1 = Service::create([
+            'service_category_id' => $category->id,
+            'name' => 'Haircut',
+            'price' => 100000,
+            'duration_minutes' => 60,
+            'is_active' => true,
+        ]);
+
+        $service2 = Service::create([
+            'service_category_id' => $category->id,
+            'name' => 'Manicure',
+            'price' => 150000,
+            'duration_minutes' => 30,
+            'is_active' => true,
+        ]);
+
+        $today = now()->toDateString();
+
+        Livewire::actingAs($owner)
+            ->test(\App\Livewire\Bookings\Create::class)
+            ->set('customer_id', $customer->id)
+            ->set('customer_name', $customer->name)
+            ->set('booking_date', $today)
+            ->set('booking_time', '10:00')
+            ->set('selected_services', [
+                ['service_id' => $service1->id, 'employee_id' => $employee1->id],
+                ['service_id' => $service2->id, 'employee_id' => $employee2->id],
+            ])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $booking = Booking::first();
+        $this->assertNotNull($booking);
+        $this->assertEquals(250000, (float) $booking->total_amount);
+
+        $bookingServices = BookingService::all();
+        $this->assertCount(2, $bookingServices);
+
+        $bs1 = $bookingServices[0];
+        $this->assertEquals($service1->id, $bs1->service_id);
+        $this->assertEquals($employee1->id, $bs1->employee_id);
+        $this->assertEquals($today . ' 10:00:00', $bs1->start_time->format('Y-m-d H:i:s'));
+        $this->assertEquals($today . ' 11:00:00', $bs1->end_time->format('Y-m-d H:i:s'));
+
+        $bs2 = $bookingServices[1];
+        $this->assertEquals($service2->id, $bs2->service_id);
+        $this->assertEquals($employee2->id, $bs2->employee_id);
+        $this->assertEquals($today . ' 11:00:00', $bs2->start_time->format('Y-m-d H:i:s'));
+        $this->assertEquals($today . ' 11:30:00', $bs2->end_time->format('Y-m-d H:i:s'));
     }
 }

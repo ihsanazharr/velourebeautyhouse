@@ -128,15 +128,29 @@
 
                             {{-- Actions --}}
                             <td class="p-4">
-                                <a
-                                    href="{{ route($customerRoutePrefix . '.customers.edit', $customer->id) }}"
-                                    class="font-body text-xs tracking-[0.1em] uppercase transition-all duration-200"
-                                    style="color: #1C1A18; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #EDEAE4;"
-                                    onmouseover="this.style.textDecorationColor='#B89B6B'"
-                                    onmouseout="this.style.textDecorationColor='#EDEAE4'"
-                                >
-                                    Edit
-                                </a>
+                                <div class="flex items-center gap-3">
+                                    <a
+                                        href="{{ route($customerRoutePrefix . '.customers.edit', $customer->id) }}"
+                                        class="font-body text-xs tracking-[0.15em] uppercase transition-all duration-200"
+                                        style="color: #1C1A18; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #EDEAE4;"
+                                        onmouseover="this.style.textDecorationColor='#B89B6B'"
+                                        onmouseout="this.style.textDecorationColor='#EDEAE4'"
+                                    >
+                                        Edit
+                                    </a>
+                                    <span class="text-[#EDEAE4]">|</span>
+                                    <button
+                                        type="button"
+                                        wire:click="delete('{{ $customer->id }}')"
+                                        wire:confirm="Apakah Anda yakin ingin menghapus customer ini beserta seluruh riwayat bookingnya?"
+                                        class="font-body text-xs tracking-[0.15em] uppercase transition-all duration-200 hover:text-[#B5402C]"
+                                        style="color: #9C9690; background: none; border: none; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #EDEAE4;"
+                                        onmouseover="this.style.textDecorationColor='#B5402C'"
+                                        onmouseout="this.style.textDecorationColor='#EDEAE4'"
+                                    >
+                                        Hapus
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     @empty
