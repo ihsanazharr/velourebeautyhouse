@@ -26,62 +26,45 @@ class Create extends Component
 
     public ?string $hire_date = null;
 
-    public float $basic_salary = 2000000;
+    public ?float $basic_salary = null;
 
-    public float $meal_allowance = 15000;
+    public ?float $meal_allowance = null;
 
-    public float $overtime_rate = 15000;
+    public ?float $overtime_rate = null;
 
     public string $employment_status = 'active';
 
-    public function updatedRole(): void
-    {
-        match ($this->role) {
-
-            'kasir' => $this->basic_salary = 2500000,
-
-            'hairstylist' => $this->basic_salary = 2000000,
-
-            'nailist_senior' => $this->basic_salary = 2000000,
-
-            'nailist_junior' => $this->basic_salary = 2000000,
-
-            default => $this->basic_salary = 2000000,
-        };
-    }
-
     public function save()
     {
+        $isKasir = strtolower(trim($this->role)) === 'kasir';
+
         $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'role' => [
-                'required',
-                'in:kasir,hairstylist,nailist_senior,nailist_junior'
-            ],
+            'role' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'max:30'],
             'birth_date' => ['nullable', 'date'],
             'address' => ['nullable'],
             'hire_date' => ['required', 'date'],
-            'basic_salary' => ['required', 'numeric', 'min:0'],
-            'meal_allowance' => ['required', 'numeric', 'min:0'],
-            'overtime_rate' => ['required', 'numeric', 'min:0'],
+            'basic_salary' => ['nullable', 'numeric', 'min:0'],
+            'meal_allowance' => ['nullable', 'numeric', 'min:0'],
+            'overtime_rate' => ['nullable', 'numeric', 'min:0'],
             'employment_status' => [
                 'required',
                 'in:active,inactive,resigned'
             ],
         ];
 
-        if ($this->role === 'kasir') {
+        if ($isKasir) {
             $rules['email'] = ['required', 'email', 'unique:users,email'];
             $rules['password'] = ['required', 'min:8'];
         }
 
         $validated = $this->validate($rules);
 
-        DB::transaction(function () use ($validated) {
+        DB::transaction(function () use ($validated, $isKasir) {
             $userId = null;
 
-            if ($this->role === 'kasir') {
+            if ($isKasir) {
                 $user = User::create([
                     'name' => $validated['name'],
                     'email' => $validated['email'],

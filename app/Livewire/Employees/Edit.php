@@ -19,9 +19,9 @@ class Edit extends Component
     public ?string $birth_date        = null;
     public ?string $address           = null;
     public ?string $hire_date         = null;
-    public float   $basic_salary      = 2000000;
-    public float   $meal_allowance    = 15000;
-    public float   $overtime_rate     = 15000;
+    public ?float  $basic_salary      = 2000000;
+    public ?float  $meal_allowance    = 15000;
+    public ?float  $overtime_rate     = 15000;
     public string  $employment_status = 'active';
 
     public function mount(Employee $employee): void
@@ -32,44 +32,35 @@ class Edit extends Component
 
         $this->name              = $employee->full_name;
         $this->email             = $user?->email ?? '';
-        $this->role              = $user?->getRoleNames()->first() ?? 'hairstylist';
+        $this->role              = $employee->role ?? $user?->getRoleNames()->first() ?? 'hairstylist';
         $this->phone             = $employee->phone;
         $this->birth_date        = $employee->birth_date?->format('Y-m-d');
         $this->address           = $employee->address;
         $this->hire_date         = $employee->hire_date?->format('Y-m-d');
-        $this->basic_salary      = (float) $employee->basic_salary;
-        $this->meal_allowance    = (float) $employee->meal_allowance;
-        $this->overtime_rate     = (float) $employee->overtime_rate;
+        $this->basic_salary      = $employee->basic_salary !== null ? (float) $employee->basic_salary : null;
+        $this->meal_allowance    = $employee->meal_allowance !== null ? (float) $employee->meal_allowance : null;
+        $this->overtime_rate     = $employee->overtime_rate !== null ? (float) $employee->overtime_rate : null;
         $this->employment_status = $employee->employment_status;
-    }
-
-    public function updatedRole(): void
-    {
-        match ($this->role) {
-            'kasir'          => $this->basic_salary = 2500000,
-            'hairstylist'    => $this->basic_salary = 2000000,
-            'nailist_senior' => $this->basic_salary = 2000000,
-            'nailist_junior' => $this->basic_salary = 2000000,
-            default          => $this->basic_salary = 2000000,
-        };
     }
 
     public function save(): void
     {
+        $isKasir = strtolower(trim($this->role)) === 'kasir';
+
         $rules = [
             'name'              => ['required', 'string', 'max:255'],
-            'role'              => ['required', 'in:kasir,hairstylist,nailist_senior,nailist_junior'],
+            'role'              => ['required', 'string', 'max:255'],
             'phone'             => ['nullable', 'max:30'],
             'birth_date'        => ['nullable', 'date'],
             'address'           => ['nullable'],
             'hire_date'         => ['required', 'date'],
-            'basic_salary'      => ['required', 'numeric', 'min:0'],
-            'meal_allowance'    => ['required', 'numeric', 'min:0'],
-            'overtime_rate'     => ['required', 'numeric', 'min:0'],
+            'basic_salary'      => ['nullable', 'numeric', 'min:0'],
+            'meal_allowance'    => ['nullable', 'numeric', 'min:0'],
+            'overtime_rate'     => ['nullable', 'numeric', 'min:0'],
             'employment_status' => ['required', 'in:active,inactive,resigned'],
         ];
 
-        if ($this->role === 'kasir') {
+        if ($isKasir) {
             $rules['email'] = ['required', 'email', 'unique:users,email,' . $this->employee->user_id];
             $rules['password'] = ['nullable', 'min:8'];
         }
@@ -78,7 +69,7 @@ class Edit extends Component
 
         $userId = $this->employee->user_id;
 
-        if ($this->role === 'kasir') {
+        if ($isKasir) {
             if ($userId) {
                 // Update existing user account
                 $user = User::findOrFail($userId);

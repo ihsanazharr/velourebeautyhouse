@@ -195,6 +195,7 @@
                     color:#FAF9F7;
                     padding:14px 28px;
                     border:none;
+                    border-radius: 6px;
                 "
             >
                 Simpan Booking
@@ -203,5 +204,61 @@
         </div>
 
     </form>
+
+    {{-- Booking History Section --}}
+    @if ($past_bookings && $past_bookings->isNotEmpty())
+        <div class="bg-white border p-8 mt-8 max-w-4xl" style="border-color:#EDEAE4; border-radius: 12px;">
+            <p class="font-body text-xs tracking-[0.2em] uppercase mb-6" style="color: #B89B6B;">Riwayat Booking Pelanggan</p>
+            
+            <div class="overflow-x-auto">
+                <table width="100%" cellpadding="0" cellspacing="0" class="font-body text-xs" style="border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #FAF9F7; border-bottom: 1px solid #EDEAE4;">
+                            <th class="text-left p-3 text-[10px] tracking-[0.1em] uppercase" style="color: #9C9690; font-weight: 500;">No. Booking</th>
+                            <th class="text-left p-3 text-[10px] tracking-[0.1em] uppercase" style="color: #9C9690; font-weight: 500;">Tanggal</th>
+                            <th class="text-left p-3 text-[10px] tracking-[0.1em] uppercase" style="color: #9C9690; font-weight: 500;">Layanan (Stylist)</th>
+                            <th class="text-left p-3 text-[10px] tracking-[0.1em] uppercase" style="color: #9C9690; font-weight: 500;">Total Harga</th>
+                            <th class="text-left p-3 text-[10px] tracking-[0.1em] uppercase" style="color: #9C9690; font-weight: 500;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($past_bookings as $pBooking)
+                            <tr style="border-bottom: 1px solid #EDEAE4;">
+                                <td class="p-3 text-[#1C1A18] font-semibold">{{ $pBooking->booking_number }}</td>
+                                <td class="p-3 text-[#3A3733]">{{ \Carbon\Carbon::parse($pBooking->booking_date)->translatedFormat('d M Y') }}</td>
+                                <td class="p-3 text-[#3A3733]">
+                                    <div class="space-y-1">
+                                        @foreach ($pBooking->services as $bService)
+                                            <div>
+                                                {{ $bService->service?->name ?? 'Service' }} 
+                                                <span class="text-[#9C9690]">
+                                                    ({{ $bService->employee?->full_name ?? 'Terapis' }})
+                                                </span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </td>
+                                <td class="p-3 text-[#1C1A18] font-medium">Rp {{ number_format($pBooking->total_amount) }}</td>
+                                <td class="p-3">
+                                    @php
+                                        $statusStyles = match ($pBooking->status) {
+                                            'completed' => 'background: #EAF1EA; color: #5C7A5C;',
+                                            'confirmed' => 'background: #EAF1EA; color: #5C7A5C;',
+                                            'pending' => 'background: #FBF3E8; color: #B89B6B;',
+                                            'cancelled' => 'background: #FBEAE7; color: #B5402C;',
+                                            default => 'background: #EDEAE4; color: #9C9690;',
+                                        };
+                                    @endphp
+                                    <span class="px-2 py-0.5 uppercase text-[9px] tracking-[0.08em] font-semibold inline-block" style="{{ $statusStyles }} border-radius: 4px;">
+                                        {{ $pBooking->status }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
 
 </div>

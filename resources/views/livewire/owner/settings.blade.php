@@ -255,6 +255,23 @@
                                 <x-input-error :messages="$errors->get('overtime_rate')" class="mt-1" />
                             </div>
                         </div>
+
+                        {{-- Booking Online Switch --}}
+                        <div class="pt-4 border-t border-[#EDEAE4]">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="!mb-0 font-semibold text-[#1C1A18]">Status Booking Online</label>
+                                    <p class="font-body text-[10px] text-[#9C9690] mt-0.5">Aktifkan atau nonaktifkan pemesanan online oleh pelanggan secara langsung.</p>
+                                </div>
+                                <div>
+                                    <select wire:model="booking_enabled" class="font-body text-xs py-2 px-3 border border-[#EDEAE4] bg-white cursor-pointer" style="border-radius: 4px; color: #1C1A18;">
+                                        <option value="1">Aktif (Buka)</option>
+                                        <option value="0">Nonaktif (Tutup)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <x-input-error :messages="$errors->get('booking_enabled')" class="mt-2" />
+                        </div>
                     </div>
                 </div>
 

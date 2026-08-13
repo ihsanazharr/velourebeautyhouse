@@ -125,4 +125,32 @@ class EmployeeTest extends TestCase
         $this->assertNull($employee->user_id);
         $this->assertNull(User::find($user->id));
     }
+
+    public function test_can_create_employee_with_custom_role_and_null_compensation_fields()
+    {
+        $owner = User::factory()->create();
+        $owner->assignRole('owner');
+
+        $this->actingAs($owner);
+
+        Livewire::test(\App\Livewire\Employees\Create::class)
+            ->set('name', 'Terapis Baru')
+            ->set('role', 'Therapist Senior')
+            ->set('phone', '08123456781')
+            ->set('hire_date', '2026-07-31')
+            ->set('basic_salary', null)
+            ->set('meal_allowance', null)
+            ->set('overtime_rate', null)
+            ->set('employment_status', 'active')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('owner.employees.index'));
+
+        $employee = Employee::where('full_name', 'Terapis Baru')->first();
+        $this->assertNotNull($employee);
+        $this->assertEquals('Therapist Senior', $employee->role);
+        $this->assertNull($employee->basic_salary);
+        $this->assertNull($employee->meal_allowance);
+        $this->assertNull($employee->overtime_rate);
+    }
 }

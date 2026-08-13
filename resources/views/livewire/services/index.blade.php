@@ -35,17 +35,34 @@
         </div>
     @endif
 
-    <div class="bg-white border mb-4 flex items-center gap-3 px-4" style="border-color: #EDEAE4;">
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10 6.5C10 8.433 8.433 10 6.5 10C4.567 10 3 8.433 3 6.5C3 4.567 4.567 3 6.5 3C8.433 3 10 4.567 10 6.5ZM9.30884 10.0159C8.53901 10.6318 7.56251 11 6.5 11C4.01472 11 2 8.98528 2 6.5C2 4.01472 4.01472 2 6.5 2C8.98528 2 11 4.01472 11 6.5C11 7.56251 10.6318 8.53901 10.0159 9.30884L12.8536 12.1464C13.0488 12.3417 13.0488 12.6583 12.8536 12.8536C12.6583 13.0488 12.3417 13.0488 12.1464 12.8536L9.30884 10.0159Z" fill="#9C9690" fill-rule="evenodd" clip-rule="evenodd"/>
-        </svg>
-        <input
-            type="text"
-            wire:model.live="search"
-            placeholder="Cari layanan..."
-            class="w-full font-body text-sm py-4 outline-none bg-transparent"
-            style="color: #1C1A18;"
-        >
+    <div class="flex flex-col sm:flex-row gap-3 mb-4">
+        {{-- Search Input --}}
+        <div class="flex-1 bg-white border flex items-center gap-3 px-4" style="border-color: #EDEAE4; border-radius: 8px;">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 6.5C10 8.433 8.433 10 6.5 10C4.567 10 3 8.433 3 6.5C3 4.567 4.567 3 6.5 3C8.433 3 10 4.567 10 6.5ZM9.30884 10.0159C8.53901 10.6318 7.56251 11 6.5 11C4.01472 11 2 8.98528 2 6.5C2 4.01472 4.01472 2 6.5 2C8.98528 2 11 4.01472 11 6.5C11 7.56251 10.6318 8.53901 10.0159 9.30884L12.8536 12.1464C13.0488 12.3417 13.0488 12.6583 12.8536 12.8536C12.6583 13.0488 12.3417 13.0488 12.1464 12.8536L9.30884 10.0159Z" fill="#9C9690" fill-rule="evenodd" clip-rule="evenodd"/>
+            </svg>
+            <input
+                type="text"
+                wire:model.live="search"
+                placeholder="Cari layanan..."
+                class="w-full font-body text-sm py-3.5 outline-none bg-transparent"
+                style="color: #1C1A18;"
+            >
+        </div>
+
+        {{-- Category Filter --}}
+        <div class="w-full sm:w-60 bg-white border flex items-center px-4" style="border-color: #EDEAE4; border-radius: 8px;">
+            <select 
+                wire:model.live="selectedCategoryId" 
+                class="w-full font-body text-sm py-3.5 outline-none bg-transparent border-none appearance-none cursor-pointer"
+                style="color: #1C1A18;"
+            >
+                <option value="">Semua Kategori</option>
+                @foreach ($categories as $cat)
+                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                @endforeach
+            </select>
+        </div>
     </div>
 
     <div class="bg-white border overflow-x-auto" style="border-color: #EDEAE4;">

@@ -32,6 +32,19 @@ class Create extends Component
 
     public ?string $notes = null;
 
+    public function mount(): void
+    {
+        $customerId = request()->query('customer_id');
+        if ($customerId) {
+            $customer = Customer::find($customerId);
+            if ($customer) {
+                $this->customer_id = $customer->id;
+                $this->customer_name = $customer->name;
+                $this->customer_phone = $customer->phone ?? '';
+            }
+        }
+    }
+
     public function addService(): void
     {
         $this->selected_services[] = ['service_id' => '', 'employee_id' => ''];
@@ -215,6 +228,14 @@ class Create extends Component
 
     public function render()
     {
+        $past_bookings = collect();
+        if (!empty($this->customer_id)) {
+            $past_bookings = Booking::where('customer_id', $this->customer_id)
+                ->with('services.service', 'services.employee')
+                ->latest()
+                ->get();
+        }
+
         return view(
             'livewire.bookings.create',
             [
@@ -230,6 +251,8 @@ class Create extends Component
                     )
                     ->orderBy('full_name')
                     ->get(),
+
+                'past_bookings' => $past_bookings,
             ]
         )->layout('layouts.app');
     }

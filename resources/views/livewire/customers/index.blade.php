@@ -130,6 +130,17 @@
                             <td class="p-4">
                                 <div class="flex items-center gap-3">
                                     <a
+                                        href="{{ route($customerRoutePrefix . '.bookings.create', ['customer_id' => $customer->id]) }}"
+                                        wire:navigate
+                                        class="font-body text-xs tracking-[0.15em] uppercase transition-all duration-200"
+                                        style="color: #B89B6B; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #EDEAE4;"
+                                        onmouseover="this.style.textDecorationColor='#1C1A18'"
+                                        onmouseout="this.style.textDecorationColor='#EDEAE4'"
+                                    >
+                                        Booking
+                                    </a>
+                                    <span class="text-[#EDEAE4]">|</span>
+                                    <a
                                         href="{{ route($customerRoutePrefix . '.customers.edit', $customer->id) }}"
                                         class="font-body text-xs tracking-[0.15em] uppercase transition-all duration-200"
                                         style="color: #1C1A18; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #EDEAE4;"

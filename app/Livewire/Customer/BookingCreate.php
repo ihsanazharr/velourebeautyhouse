@@ -42,6 +42,12 @@ class BookingCreate extends Component
 
     public function mount(): void
     {
+        $settings = Setting::first();
+        if ($settings && !$settings->booking_enabled) {
+            $this->redirect(route('welcome'));
+            return;
+        }
+
         $intendedBooking = session('intended_booking', []);
 
         $this->date = $intendedBooking['date'] ?? Carbon::now($this->timezone)->toDateString();

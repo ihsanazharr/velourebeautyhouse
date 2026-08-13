@@ -11,8 +11,14 @@ class Index extends Component
     use WithPagination;
 
     public string $search = '';
+    public ?int $selectedCategoryId = null;
 
     public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSelectedCategoryId(): void
     {
         $this->resetPage();
     }
@@ -29,8 +35,14 @@ class Index extends Component
 
     public function render()
     {
+        $categories = \App\Models\ServiceCategory::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
         $services = Service::query()
             ->with('category')
+            ->when($this->selectedCategoryId, fn($q) => $q->where('service_category_id', $this->selectedCategoryId))
             ->when(
                 $this->search,
                 fn ($query) =>
@@ -45,7 +57,7 @@ class Index extends Component
 
         return view(
             'livewire.services.index',
-            compact('services')
+            compact('services', 'categories')
         )->layout('layouts.app');
     }
 }

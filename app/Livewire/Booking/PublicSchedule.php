@@ -112,11 +112,16 @@ class PublicSchedule extends Component
             $cursor->addMinutes($this->slotMinutes);
         }
 
+        $settings = \App\Models\Setting::first();
+        $isBookingEnabled = $settings?->booking_enabled ?? true;
+
         return view('livewire.bookings.public-schedule', [
             'services' => $services,
             'categories' => $categories,
             'slots' => $slots,
             'today' => $now,
+            'isBookingEnabled' => $isBookingEnabled,
+            'whatsappNumber' => $settings?->whatsapp_number ?? '',
         ]);
     }
 }

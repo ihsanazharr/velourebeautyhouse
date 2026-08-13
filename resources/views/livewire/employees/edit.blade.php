@@ -93,12 +93,7 @@
 
                         <div>
                             <label>Jabatan / Peran <span style="color:#B5402C;">*</span></label>
-                            <select wire:model.live="role">
-                                <option value="hairstylist">Hairstylist</option>
-                                <option value="nailist_senior">Nailist Senior</option>
-                                <option value="nailist_junior">Nailist Junior</option>
-                                <option value="kasir">Kasir</option>
-                            </select>
+                            <input type="text" wire:model.live="role" placeholder="Contoh: Hairstylist, Kasir, Nailist, dll" autocomplete="off">
                             <x-input-error :messages="$errors->get('role')" class="mt-2" />
                         </div>
 
@@ -198,20 +193,20 @@
 
                     <div class="space-y-4 font-body text-sm">
                         <div>
-                            <label class="!text-[10px] !mb-1">Gaji Pokok (Rp) <span style="color:#B5402C;">*</span></label>
-                            <input type="number" wire:model="basic_salary" step="50000">
+                            <label class="!text-[10px] !mb-1">Gaji Pokok (Rp)</label>
+                            <input type="number" wire:model="basic_salary" step="50000" placeholder="Contoh: 2000000">
                             <x-input-error :messages="$errors->get('basic_salary')" class="mt-1" />
                         </div>
 
                         <div>
-                            <label class="!text-[10px] !mb-1">Uang Makan / Hari (Rp) <span style="color:#B5402C;">*</span></label>
-                            <input type="number" wire:model="meal_allowance" step="1000">
+                            <label class="!text-[10px] !mb-1">Uang Makan / Hari (Rp)</label>
+                            <input type="number" wire:model="meal_allowance" step="1000" placeholder="Contoh: 15000">
                             <x-input-error :messages="$errors->get('meal_allowance')" class="mt-1" />
                         </div>
 
                         <div>
-                            <label class="!text-[10px] !mb-1">Lemburan / Jam (Rp) <span style="color:#B5402C;">*</span></label>
-                            <input type="number" wire:model="overtime_rate" step="1000">
+                            <label class="!text-[10px] !mb-1">Uang Lembur / Jam (Rp)</label>
+                            <input type="number" wire:model="overtime_rate" step="1000" placeholder="Contoh: 15000">
                             <x-input-error :messages="$errors->get('overtime_rate')" class="mt-1" />
                         </div>
 
