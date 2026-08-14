@@ -231,7 +231,7 @@ class Create extends Component
         $past_bookings = collect();
         if (!empty($this->customer_id)) {
             $past_bookings = Booking::where('customer_id', $this->customer_id)
-                ->with('services.service', 'services.employee')
+                ->with('services.service', 'services.employee', 'invoice')
                 ->latest()
                 ->get();
         }

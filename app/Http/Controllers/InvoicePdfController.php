@@ -13,7 +13,8 @@ class InvoicePdfController extends Controller
     {
         $invoice->load([
             'customer',
-            'booking',
+            'booking.services.service',
+            'booking.services.employee',
         ]);
 
         $pdf = Pdf::loadView(

@@ -115,7 +115,12 @@
                     <div style="border-top: 1px dashed #EDEAE4; border-bottom: 1px dashed #EDEAE4;" class="py-3 my-4 space-y-2">
                         @foreach($booking->services as $bs)
                             <div class="flex justify-between items-center text-sm font-body">
-                                <span class="text-[#3A3733]">{{ $bs->service?->name }}</span>
+                                <div class="flex flex-col">
+                                    <span class="text-[#3A3733] font-medium">{{ $bs->service?->name }}</span>
+                                    @if ($bs->employee)
+                                        <span class="text-[11px] text-[#9C9690]">Stylist: {{ $bs->employee->full_name }}</span>
+                                    @endif
+                                </div>
                                 <span class="text-[#1C1A18] font-semibold">Rp {{ number_format($bs->price) }}</span>
                             </div>
                         @endforeach

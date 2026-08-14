@@ -212,6 +212,9 @@
             
             <div class="overflow-x-auto">
                 <table width="100%" cellpadding="0" cellspacing="0" class="font-body text-xs" style="border-collapse: collapse;">
+                    @php
+                        $routePrefix = auth()->user()->hasRole('kasir') ? 'kasir' : 'owner';
+                    @endphp
                     <thead>
                         <tr style="background: #FAF9F7; border-bottom: 1px solid #EDEAE4;">
                             <th class="text-left p-3 text-[10px] tracking-[0.1em] uppercase" style="color: #9C9690; font-weight: 500;">No. Booking</th>
@@ -219,6 +222,7 @@
                             <th class="text-left p-3 text-[10px] tracking-[0.1em] uppercase" style="color: #9C9690; font-weight: 500;">Layanan (Stylist)</th>
                             <th class="text-left p-3 text-[10px] tracking-[0.1em] uppercase" style="color: #9C9690; font-weight: 500;">Total Harga</th>
                             <th class="text-left p-3 text-[10px] tracking-[0.1em] uppercase" style="color: #9C9690; font-weight: 500;">Status</th>
+                            <th class="text-left p-3 text-[10px] tracking-[0.1em] uppercase" style="color: #9C9690; font-weight: 500;">Invoice</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -252,6 +256,20 @@
                                     <span class="px-2 py-0.5 uppercase text-[9px] tracking-[0.08em] font-semibold inline-block" style="{{ $statusStyles }} border-radius: 4px;">
                                         {{ $pBooking->status }}
                                     </span>
+                                </td>
+                                <td class="p-3">
+                                    @if ($pBooking->invoice)
+                                        <a 
+                                            href="{{ route($routePrefix . '.invoices.show', $pBooking->invoice->id) }}"
+                                            wire:navigate
+                                            class="font-semibold text-[#B89B6B] hover:underline"
+                                            style="text-decoration: underline; text-underline-offset: 2px;"
+                                        >
+                                            {{ $pBooking->invoice->invoice_number }}
+                                        </a>
+                                    @else
+                                        <span class="text-[#9C9690]">—</span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

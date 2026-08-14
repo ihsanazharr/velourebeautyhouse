@@ -100,6 +100,21 @@
                         <p class="text-xs uppercase tracking-[0.15em]" style="color:#9C9690;">Catatan</p>
                         <p class="mt-1 whitespace-pre-line">{{ $booking->notes ?: '-' }}</p>
                     </div>
+                    @if($booking->invoice)
+                    <div>
+                        <p class="text-xs uppercase tracking-[0.15em]" style="color:#9C9690;">Invoice</p>
+                        <p class="mt-1">
+                            <a 
+                                href="{{ route($bookingRoutePrefix . '.invoices.show', $booking->invoice->id) }}"
+                                wire:navigate
+                                class="text-[#B89B6B] hover:underline"
+                                style="text-decoration: underline; text-underline-offset: 3px; font-weight: 500;"
+                            >
+                                {{ $booking->invoice->invoice_number }}
+                            </a>
+                        </p>
+                    </div>
+                    @endif
                 </div>
             </aside>
         </div>

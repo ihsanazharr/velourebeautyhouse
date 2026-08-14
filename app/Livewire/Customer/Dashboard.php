@@ -36,7 +36,7 @@ class Dashboard extends Component
             ->whereHas('bookingCustomers', function ($query) use ($customer) {
                 $query->where('customer_id', $customer->id);
             })
-            ->with(['services.service', 'invoice'])
+            ->with(['services.service', 'services.employee', 'invoice'])
             ->latest('booking_date')
             ->latest('created_at')
             ->paginate(5);

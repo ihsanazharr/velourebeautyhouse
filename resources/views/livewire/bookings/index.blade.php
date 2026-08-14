@@ -158,9 +158,18 @@
                                     </button>
 
                                 @else
-
-                                    <span style="color:#9C9690;">Invoice Sudah Ada</span>
-
+                                    @php
+                                        $routePrefix = auth()->user()->hasRole('kasir') ? 'kasir' : 'owner';
+                                    @endphp
+                                    <a
+                                        href="{{ route($routePrefix . '.invoices.show', $booking->invoice->id) }}"
+                                        wire:navigate
+                                        style="color:#B89B6B; text-decoration:underline; text-underline-offset:3px; text-decoration-color:#EDEAE4;"
+                                        onmouseover="this.style.textDecorationColor='#B89B6B'"
+                                        onmouseout="this.style.textDecorationColor='#EDEAE4'"
+                                    >
+                                        Lihat Invoice
+                                    </a>
                                 @endif
                             </div>
                         </td>
