@@ -243,18 +243,7 @@
                             </div>
                         </div>
 
-                        <div class="grid sm:grid-cols-2 gap-4">
-                            <div>
-                                <label>Uang Makan Harian (Rp)</label>
-                                <input type="number" wire:model="meal_allowance_amount">
-                                <x-input-error :messages="$errors->get('meal_allowance_amount')" class="mt-1" />
-                            </div>
-                            <div>
-                                <label>Tarif Lembur per Jam (Rp)</label>
-                                <input type="number" wire:model="overtime_rate">
-                                <x-input-error :messages="$errors->get('overtime_rate')" class="mt-1" />
-                            </div>
-                        </div>
+
 
                         {{-- Booking Online Switch --}}
                         <div class="pt-4 border-t border-[#EDEAE4]">

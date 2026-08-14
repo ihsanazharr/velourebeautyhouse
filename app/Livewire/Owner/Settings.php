@@ -20,8 +20,6 @@ class Settings extends Component
     public string $close_time = '20:00';
     public int $late_tolerance_minutes = 10;
     public float $late_penalty_amount = 10000;
-    public float $overtime_rate = 15000;
-    public float $meal_allowance_amount = 15000;
     public bool $booking_enabled = true;
 
     // Image Uploads
@@ -45,8 +43,6 @@ class Settings extends Component
             $this->close_time = substr($setting->close_time, 0, 5); // Format HH:MM
             $this->late_tolerance_minutes = $setting->late_tolerance_minutes;
             $this->late_penalty_amount = $setting->late_penalty_amount;
-            $this->overtime_rate = $setting->overtime_rate;
-            $this->meal_allowance_amount = $setting->meal_allowance_amount;
             $this->booking_enabled = (bool) ($setting->booking_enabled ?? true);
             $this->current_hero_image = $setting->hero_image;
             $this->current_qris_image = $setting->qris_image;
@@ -87,8 +83,6 @@ class Settings extends Component
             'close_time' => ['required', 'date_format:H:i'],
             'late_tolerance_minutes' => ['required', 'integer', 'min:0'],
             'late_penalty_amount' => ['required', 'numeric', 'min:0'],
-            'overtime_rate' => ['required', 'numeric', 'min:0'],
-            'meal_allowance_amount' => ['required', 'numeric', 'min:0'],
             'booking_enabled' => ['required', 'boolean'],
             'hero_image_file' => ['nullable', 'image', 'max:4096'], // Max 4MB
             'qris_image_file' => ['nullable', 'image', 'max:4096'], // Max 4MB
