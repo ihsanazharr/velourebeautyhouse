@@ -114,33 +114,78 @@
 
     {{-- Modal Pop-up Booking Online Sedang Ditutup --}}
     @if ($showClosedModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300">
-            <div class="bg-white max-w-md w-full p-8 text-center relative" style="border: 1px solid var(--color-surface); border-radius: 16px; box-shadow: 0 10px 30px rgba(28,26,24,0.08);">
+        <style>
+            .veloure-modal-backdrop {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(28, 26, 24, 0.4);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                opacity: 0;
+                animation: veloureFadeIn 0.3s ease-out forwards;
+            }
+
+            .veloure-modal-content {
+                background-color: white;
+                width: 100%;
+                max-width: 440px;
+                border-radius: 16px;
+                padding: 32px;
+                text-align: center;
+                position: relative;
+                border: 1px solid #EDEAE4;
+                box-shadow: 0 20px 40px rgba(28, 26, 24, 0.15);
+                transform: scale(0.9);
+                animation: veloureScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            }
+
+            @keyframes veloureFadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+
+            @keyframes veloureScaleIn {
+                from { transform: scale(0.9); }
+                to { transform: scale(1); }
+            }
+        </style>
+
+        <div class="veloure-modal-backdrop" wire:click.self="closeModal">
+            <div class="veloure-modal-content">
                 {{-- Close button --}}
                 <button 
                     type="button" 
                     wire:click="closeModal"
                     class="absolute top-4 right-4 text-[#9C9690] hover:text-[#1C1A18] transition-colors"
+                    style="background: none; border: none; cursor: pointer; padding: 4px; position: absolute; top: 16px; right: 16px;"
                 >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
 
-                <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5" style="background: #FBF3E8;">
+                <div style="background: #FBF3E8; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B89B6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
                         <polyline points="12 6 12 12 16 14"></polyline>
                     </svg>
                 </div>
                 
-                <h2 class="font-display text-xl mb-3 text-[#1C1A18] font-semibold tracking-wide">
+                <h2 class="font-display text-xl mb-3 text-[#1C1A18] font-semibold tracking-wide" style="font-size: 20px; font-weight: 600; margin-bottom: 12px;">
                     Booking Online Sedang Ditutup
                 </h2>
                 
-                <p class="font-body text-xs text-[#9C9690] leading-relaxed mb-6">
+                <p class="font-body text-xs text-[#9C9690] leading-relaxed mb-6" style="font-size: 13px; color: #9C9690; line-height: 1.6; margin-bottom: 24px;">
                     Mohon maaf, saat ini antrean di studio kami sedang ramai. Untuk kenyamanan dan pelayanan terbaik, pemesanan online dinonaktifkan sementara waktu.
                 </p>
                 
-                <p class="font-body text-[11px] text-[#1C1A18] font-medium mb-4">
+                <p class="font-body text-[11px] text-[#1C1A18] font-medium mb-4" style="font-size: 12px; color: #1C1A18; font-weight: 500; margin-bottom: 16px;">
                     Tetap ingin melakukan reservasi? Silakan hubungi kami via WhatsApp:
                 </p>
 
@@ -155,7 +200,7 @@
                     href="https://wa.me/{{ $cleanWa }}?text=Halo%20Veloure%20Beauty%20House,%20saya%20ingin%20tanya%20jadwal%20booking%20yang%20tersedia" 
                     target="_blank"
                     class="font-body text-xs tracking-[0.15em] uppercase transition-all duration-300 inline-flex items-center justify-center gap-2 hover:opacity-90 w-full"
-                    style="background: #25D366; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;"
+                    style="background: #25D366; color: white; padding: 14px 24px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.1em;"
                 >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="inline">
                         <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm5.835-4.26c1.654.982 3.28 1.487 4.908 1.488 5.48-.002 9.943-4.468 9.946-9.954.001-2.657-1.033-5.155-2.915-7.04C15.95 2.348 13.456 1.31 10.8 1.31 5.32 1.31.859 5.772.856 11.258c-.001 1.761.488 3.42 1.486 4.907L1.22 20.732l4.673-1.228zM18.23 15.25c-.29-.145-1.71-.845-1.975-.94-.266-.097-.46-.145-.653.145-.19.29-.74.94-.905 1.13-.167.19-.333.21-.623.065-2.453-1.224-4.015-2.422-5.466-4.92-.387-.668.388-.62 1.11-2.05.114-.228.058-.427-.03-.607-.087-.18-.74-1.79-.994-2.4-.25-.6-.524-.52-.716-.53-.186-.01-.398-.01-.61-.01s-.557.08-.85.4c-.29.32-1.11 1.085-1.11 2.65 0 1.563 1.137 3.076 1.296 3.29 1.59 2.185 3.06 4.3 6.365 5.564 2.56 1.026 3.33 1.06 4.5 1.06 1.17 0 2.69-.96 3.07-2.05.38-1.09.38-2.025.266-2.22-.115-.19-.387-.31-.678-.455z"/>
