@@ -69,7 +69,7 @@
     </style>
 
     <form wire:submit="save" class="veloure-form">
-        <div class="grid lg:grid-cols-[1fr_320px] gap-6 max-w-5xl">
+        <div class="grid lg:grid-cols-[1fr_320px] gap-6 w-full">
 
             {{-- Left: Main Form Content --}}
             <div class="space-y-6">

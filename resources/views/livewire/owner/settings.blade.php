@@ -61,7 +61,7 @@
         }
     </style>
 
-    <form wire:submit="save" class="veloure-form max-w-5xl">
+    <form wire:submit="save" class="veloure-form w-full">
         <div class="grid lg:grid-cols-2 gap-8 items-start">
             
             {{-- COLUMN 1: IMAGE MANAGEMENT --}}

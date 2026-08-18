@@ -30,6 +30,7 @@ class PublicSchedule extends Component
     protected string $timezone = 'Asia/Jakarta';
 
     public ?int $selectedCategoryId = null;
+    public bool $showClosedModal = false;
 
     public function mount(): void
     {
@@ -43,6 +44,12 @@ class PublicSchedule extends Component
      */
     public function selectSlot(string $time): mixed
     {
+        $settings = \App\Models\Setting::first();
+        if ($settings && !$settings->booking_enabled) {
+            $this->showClosedModal = true;
+            return null;
+        }
+
         session()->put('intended_booking', [
             'date' => $this->date,
             'time' => $time,
@@ -57,6 +64,11 @@ class PublicSchedule extends Component
         }
 
         return redirect()->route('dashboard');
+    }
+
+    public function closeModal(): void
+    {
+        $this->showClosedModal = false;
     }
 
     public function render()

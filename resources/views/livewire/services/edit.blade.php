@@ -44,7 +44,7 @@
         }
     </style>
 
-    <form wire:submit="save" class="veloure-form max-w-5xl">
+    <form wire:submit="save" class="veloure-form w-full">
         <div class="grid lg:grid-cols-2 gap-6">
             <div class="bg-white border p-6 sm:p-8" style="border-color:#EDEAE4;">
                 <p class="font-body text-xs tracking-[0.2em] uppercase mb-6" style="color:#B89B6B;">Informasi Layanan</p>

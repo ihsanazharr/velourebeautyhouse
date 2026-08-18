@@ -30,7 +30,7 @@
         }
     </style>
 
-    <form wire:submit="save" class="veloure-form max-w-4xl">
+    <form wire:submit="save" class="veloure-form w-full">
         <div class="bg-white border p-6 sm:p-8" style="border-color:#EDEAE4;">
             <p class="font-body text-xs tracking-[0.2em] uppercase mb-6" style="color:#B89B6B;">Detail Adjustment</p>
 

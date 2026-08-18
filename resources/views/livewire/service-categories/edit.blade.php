@@ -12,7 +12,7 @@
         <a href="{{ route('owner.service-categories.index') }}" wire:navigate class="font-body text-xs tracking-[0.15em] uppercase underline underline-offset-4" style="color:#9C9690;">Kembali</a>
     </div>
 
-    <form wire:submit="save" class="max-w-2xl">
+    <form wire:submit="save" class="w-full">
         <div class="bg-white border p-6 sm:p-8" style="border-color:#EDEAE4;">
             <div class="mb-6">
                 <label class="block font-body text-xs tracking-[0.15em] uppercase mb-2" style="color:#3A3733;">Nama Kategori</label>

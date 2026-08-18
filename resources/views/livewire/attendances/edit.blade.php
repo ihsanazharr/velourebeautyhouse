@@ -43,7 +43,7 @@
         }
     </style>
 
-    <form wire:submit="save" class="veloure-form max-w-2xl">
+    <form wire:submit="save" class="veloure-form w-full">
 
         <div class="bg-white" style="border: 1px solid #EDEAE4; border-radius: 12px; padding: 32px;">
 

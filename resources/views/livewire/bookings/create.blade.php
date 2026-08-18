@@ -39,7 +39,7 @@
 
     <form wire:submit="save" class="veloure-form">
 
-        <div class="bg-white border p-8 max-w-2xl" style="border-color:#EDEAE4;">
+        <div class="bg-white border p-8 w-full" style="border-color:#EDEAE4;">
 
             <div class="mb-6 relative" x-data="{ open: true }" @click.away="open = false">
 
@@ -207,7 +207,7 @@
 
     {{-- Booking History Section --}}
     @if ($past_bookings && $past_bookings->isNotEmpty())
-        <div class="bg-white border p-8 mt-8 max-w-4xl" style="border-color:#EDEAE4; border-radius: 12px;">
+        <div class="bg-white border p-8 mt-8 w-full" style="border-color:#EDEAE4; border-radius: 12px;">
             <p class="font-body text-xs tracking-[0.2em] uppercase mb-6" style="color: #B89B6B;">Riwayat Booking Pelanggan</p>
             
             <div class="overflow-x-auto">
