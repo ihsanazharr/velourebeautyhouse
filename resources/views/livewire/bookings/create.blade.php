@@ -150,6 +150,131 @@
                 </div>
             </div>
 
+            {{-- Beli Produk (Search Dropdown + Qty) --}}
+            <div class="mb-6 p-5 border border-[#EDEAE4] bg-[#FAF9F7]" style="border-radius: 8px;">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <label class="!mb-0 !text-xs font-semibold text-[#1C1A18]">Beli Produk (Opsional)</label>
+                        <p class="font-body text-[11px] text-[#9C9690] mt-0.5">Pilih produk ritel yang dibeli oleh pelanggan saat booking ini</p>
+                    </div>
+                    <span class="font-body text-[10px] tracking-wider uppercase px-2 py-0.5 bg-[#EDEAE4] text-[#3A3733]" style="border-radius: 4px;">
+                        {{ count($selected_products) }} Produk
+                    </span>
+                </div>
+
+                {{-- Product Search Input with Dropdown --}}
+                <div class="relative mb-4" x-data="{ open: true }" @click.away="open = false">
+                    <div class="relative">
+                        <input
+                            type="text"
+                            wire:model.live.debounce.300ms="product_search"
+                            placeholder="Cari produk (nama / SKU / barcode)..."
+                            @focus="open = true"
+                            autocomplete="off"
+                            class="!bg-white"
+                        >
+                        @if($product_search)
+                            <button 
+                                type="button" 
+                                wire:click="$set('product_search', '')" 
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+                            >
+                                ✕
+                            </button>
+                        @endif
+                    </div>
+
+                    @if(!empty($product_suggestions))
+                        <div 
+                            x-show="open" 
+                            class="absolute z-50 left-0 right-0 mt-1 bg-white border shadow-lg max-h-60 overflow-y-auto"
+                            style="border-color: #EDEAE4; border-radius: 6px;"
+                        >
+                            @foreach($product_suggestions as $suggestion)
+                                <div
+                                    wire:click="addProduct('{{ $suggestion['id'] }}')"
+                                    @click="open = false"
+                                    class="p-3 font-body text-sm cursor-pointer transition-colors duration-200 hover:bg-[#FAF9F7] flex items-center justify-between"
+                                    style="border-bottom: 1px solid #EDEAE4;"
+                                >
+                                    <div>
+                                        <div class="font-medium text-[#1C1A18]">{{ $suggestion['name'] }}</div>
+                                        <div class="text-xs text-[#9C9690]">
+                                            @if($suggestion['sku'])
+                                                SKU: {{ $suggestion['sku'] }} &middot;
+                                            @endif
+                                            Stok: <span class="font-semibold {{ $suggestion['current_stock'] > 5 ? 'text-[#5C7A5C]' : 'text-[#B5402C]' }}">{{ $suggestion['current_stock'] }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-semibold text-[#B89B6B]">Rp {{ number_format($suggestion['selling_price'], 0, ',', '.') }}</div>
+                                        <span class="text-[10px] text-[#5C7A5C] bg-[#EAF1EA] px-1.5 py-0.5 rounded font-medium">+ Tambah</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @elseif(strlen($product_search) >= 2)
+                        <div 
+                            x-show="open" 
+                            class="absolute z-50 left-0 right-0 mt-1 bg-white border p-3 text-center text-xs text-[#9C9690] shadow-lg"
+                            style="border-color: #EDEAE4; border-radius: 6px;"
+                        >
+                            Tidak ada produk ditemukan untuk "{{ $product_search }}"
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Selected Products Table / List --}}
+                @if(!empty($selected_products))
+                    <div class="bg-white border border-[#EDEAE4] overflow-hidden" style="border-radius: 6px;">
+                        <div class="p-3 bg-[#FAF9F7] border-b border-[#EDEAE4] grid grid-cols-12 text-[10px] uppercase tracking-wider font-semibold text-[#9C9690]">
+                            <div class="col-span-5 sm:col-span-6">Produk</div>
+                            <div class="col-span-3 sm:col-span-2 text-right">Harga</div>
+                            <div class="col-span-2 sm:col-span-2 text-center">Qty</div>
+                            <div class="col-span-2 sm:col-span-2 text-right">Subtotal</div>
+                        </div>
+                        <div class="divide-y divide-[#EDEAE4]">
+                            @foreach($selected_products as $pIndex => $pItem)
+                                <div class="p-3 grid grid-cols-12 items-center gap-2 text-xs font-body" wire:key="selected-prod-{{ $pIndex }}">
+                                    <div class="col-span-5 sm:col-span-6">
+                                        <div class="font-medium text-[#1C1A18]">{{ $pItem['name'] }}</div>
+                                        @if(!empty($pItem['sku']))
+                                            <div class="text-[10px] text-[#9C9690]">SKU: {{ $pItem['sku'] }}</div>
+                                        @endif
+                                        <x-input-error :messages="$errors->get('selected_products.'.$pIndex.'.quantity')" class="mt-1" />
+                                    </div>
+                                    <div class="col-span-3 sm:col-span-2 text-right text-[#3A3733]">
+                                        Rp {{ number_format($pItem['price'], 0, ',', '.') }}
+                                    </div>
+                                    <div class="col-span-2 sm:col-span-2 flex items-center justify-center gap-1">
+                                        <input 
+                                            type="number" 
+                                            min="1" 
+                                            max="{{ $pItem['max_stock'] ?? 999 }}"
+                                            wire:model.live="selected_products.{{ $pIndex }}.quantity"
+                                            class="!w-16 !p-1.5 !text-center !text-xs !bg-[#FAF9F7] border border-[#EDEAE4] rounded"
+                                        >
+                                    </div>
+                                    <div class="col-span-2 sm:col-span-2 flex items-center justify-end gap-2">
+                                        <span class="font-semibold text-[#1C1A18]">
+                                            Rp {{ number_format(((float)$pItem['price']) * max(1, (int)($pItem['quantity'] ?? 1)), 0, ',', '.') }}
+                                        </span>
+                                        <button 
+                                            type="button" 
+                                            wire:click="removeProduct({{ $pIndex }})" 
+                                            class="text-red-400 hover:text-red-600 transition-colors p-1"
+                                            title="Hapus Produk"
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
 
                 <div>
@@ -187,19 +312,33 @@
 
             </div>
 
-            <button
-                type="submit"
-                class="font-body text-xs tracking-[0.15em] uppercase transition-colors duration-300 hover:opacity-90"
-                style="
-                    background:#1C1A18;
-                    color:#FAF9F7;
-                    padding:14px 28px;
-                    border:none;
-                    border-radius: 6px;
-                "
-            >
-                Simpan Booking
-            </button>
+            {{-- Total Summary Banner & Submit Button --}}
+            <div class="pt-6 border-t border-[#EDEAE4] flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <div class="text-[10px] uppercase tracking-wider text-[#9C9690] font-body">Estimasi Total Biaya</div>
+                    <div class="font-display text-3xl font-semibold text-[#1C1A18]">
+                        Rp {{ number_format($this->calculateTotal(), 0, ',', '.') }}
+                    </div>
+                    <div class="text-xs text-[#9C9690] font-body">
+                        {{ count($selected_services) }} Layanan &middot; {{ count($selected_products) }} Produk
+                    </div>
+                </div>
+
+                <button
+                    type="submit"
+                    class="font-body text-xs tracking-[0.15em] uppercase transition-all duration-300 hover:opacity-90 flex items-center gap-2"
+                    style="
+                        background:#1C1A18;
+                        color:#FAF9F7;
+                        padding:14px 28px;
+                        border:none;
+                        border-radius: 6px;
+                    "
+                >
+                    <span>Simpan & Selesaikan Pembayaran</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </button>
+            </div>
 
         </div>
 

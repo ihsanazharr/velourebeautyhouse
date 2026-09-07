@@ -60,4 +60,9 @@ class Booking extends Model
     {
         return $this->hasOne(Invoice::class);
     }
+
+    public function products()
+    {
+        return $this->hasMany(BookingProduct::class);
+    }
 }

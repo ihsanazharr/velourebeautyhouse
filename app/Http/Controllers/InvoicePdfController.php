@@ -15,6 +15,7 @@ class InvoicePdfController extends Controller
             'customer',
             'booking.services.service',
             'booking.services.employee',
+            'booking.products.product',
         ]);
 
         $pdf = Pdf::loadView(

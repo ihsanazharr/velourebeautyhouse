@@ -20,6 +20,7 @@ class Show extends Component
             'customer',
             'booking.services.service',
             'booking.services.employee',
+            'booking.products.product',
             'booking.paymentProofs',
             'booking.bookingCustomers.customer',
         ]);
@@ -49,7 +50,7 @@ class Show extends Component
         $this->cash_change = max(0, $received - $total);
     }
 
-    public function markPaid(): void
+    public function markPaid()
     {
         $this->validate([
             'payment_method' => ['required', 'in:Cash,QRIS,Bank Transfer,Debit'],
@@ -71,9 +72,11 @@ class Show extends Component
             'cash_change' => $change,
         ]);
 
-        session()->flash('success', 'Invoice berhasil ditandai sebagai LUNAS.');
+        session()->flash('success', 'Transaksi berhasil dan invoice telah ditandai LUNAS.');
 
-        $this->redirect(request()->header('Referer'), navigate: true);
+        $routePrefix = auth()->user()?->hasRole('kasir') ? 'kasir' : 'owner';
+
+        return redirect()->route($routePrefix . '.invoices.success', $this->invoice->id);
     }
 
     public function render()

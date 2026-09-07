@@ -28,6 +28,7 @@ use App\Livewire\Payrolls\Generate as PayrollGenerate;
 use App\Livewire\Payrolls\Show as PayrollShow;
 use App\Livewire\Invoices\Index as InvoiceIndex;
 use App\Livewire\Invoices\Show as InvoiceShow;
+use App\Livewire\Invoices\Success as InvoiceSuccess;
 use App\Livewire\PaymentProofs\Index as PaymentProofIndex;
 use App\Livewire\PaymentProofs\Show as PaymentProofShow;
 use App\Livewire\ServiceCategories\Index as ServiceCategoryIndex;
@@ -256,6 +257,11 @@ Route::prefix('owner')
             )->name('invoices.show');
 
             Route::get(
+                '/invoices/{invoice}/success',
+                InvoiceSuccess::class
+            )->name('invoices.success');
+
+            Route::get(
                 '/invoices/{invoice}/pdf',
                 [InvoicePdfController::class, 'download']
             )->name('invoices.pdf');
@@ -409,6 +415,11 @@ Route::prefix('owner')
             '/invoices/{invoice}',
             InvoiceShow::class
         )->name('invoices.show');
+
+        Route::get(
+            '/invoices/{invoice}/success',
+            InvoiceSuccess::class
+        )->name('invoices.success');
 
         Route::get(
             '/invoices/{invoice}/pdf',

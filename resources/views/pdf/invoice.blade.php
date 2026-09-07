@@ -205,7 +205,7 @@
     <table class="item-table" cellpadding="0" cellspacing="0">
         <thead>
             <tr>
-                <th style="width: 70%;">Deskripsi Layanan</th>
+                <th style="width: 70%;">Deskripsi Layanan & Produk</th>
                 <th style="width: 30%; text-align: right;">Harga</th>
             </tr>
         </thead>
@@ -213,8 +213,9 @@
             @php
                 $booking = $invoice->booking;
                 $services = $booking?->services ?? collect();
+                $products = $booking?->products ?? collect();
             @endphp
-            @forelse($services as $item)
+            @foreach($services as $item)
                 <tr>
                     <td>
                         <div class="item-name">{{ $item->service?->name ?? 'Layanan Kecantikan' }}</div>
@@ -231,13 +232,31 @@
                         Rp {{ number_format((float)$item->price, 0, ',', '.') }}
                     </td>
                 </tr>
-            @empty
+            @endforeach
+
+            @foreach($products as $pItem)
                 <tr>
-                    <td colspan="2" style="text-align: center; color: #9C9690; font-style: italic;">
-                        Tidak ada detail layanan
+                    <td>
+                        <div class="item-name">{{ $pItem->product?->name ?? 'Produk' }} (x{{ $pItem->quantity }})</div>
+                        @if($pItem->product?->sku)
+                            <div class="item-time">SKU: {{ $pItem->product->sku }} &middot; @ Rp {{ number_format((float)$pItem->unit_price, 0, ',', '.') }}</div>
+                        @else
+                            <div class="item-time">@ Rp {{ number_format((float)$pItem->unit_price, 0, ',', '.') }}</div>
+                        @endif
+                    </td>
+                    <td class="item-price">
+                        Rp {{ number_format((float)$pItem->subtotal, 0, ',', '.') }}
                     </td>
                 </tr>
-            @endforelse
+            @endforeach
+
+            @if($services->isEmpty() && $products->isEmpty())
+                <tr>
+                    <td colspan="2" style="text-align: center; color: #9C9690; font-style: italic;">
+                        Tidak ada detail layanan atau produk
+                    </td>
+                </tr>
+            @endif
         </tbody>
     </table>
 

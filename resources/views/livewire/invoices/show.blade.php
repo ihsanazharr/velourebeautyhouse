@@ -3,6 +3,7 @@
         $invoiceRoutePrefix = auth()->user()->hasRole('kasir') ? 'kasir' : 'owner';
         $booking  = $invoice->booking;
         $services = $booking?->services ?? collect();
+        $products = $booking?->products ?? collect();
         $proofs   = $booking?->paymentProofs ?? collect();
         $dp       = (float) ($booking?->dp_amount ?? 0);
         $subtotal = (float) $invoice->subtotal;
@@ -164,6 +165,38 @@
                     <div style="font-size: 11px; color: #9C9690; text-align: center; padding: 8px 0;">Tidak ada detail layanan</div>
                 @endforelse
             </div>
+
+            {{-- Product Items on Receipt --}}
+            @if($products->isNotEmpty())
+            <div style="padding: 0 20px;">
+                <div style="border-top: 1px dashed #EDEAE4; margin: 16px 0;"></div>
+            </div>
+
+            <div style="padding: 0 24px;">
+                <div style="font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #9C9690; font-family: 'Poppins', sans-serif; margin-bottom: 12px;">Produk</div>
+
+                @foreach($products as $pItem)
+                    <div style="margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                            <div style="flex: 1;">
+                                <div style="font-size: 12px; color: #1C1A18; font-weight: 500; line-height: 1.4;">
+                                    {{ $pItem->product?->name ?? 'Produk' }}
+                                    <span style="color: #9C9690;"> ×{{ $pItem->quantity }}</span>
+                                </div>
+                                @if($pItem->product?->sku)
+                                    <div style="font-size: 10px; color: #9C9690; margin-top: 1px;">
+                                        SKU: {{ $pItem->product->sku }}
+                                    </div>
+                                @endif
+                            </div>
+                            <div style="font-size: 12px; color: #1C1A18; white-space: nowrap; font-weight: 600;">
+                                Rp {{ number_format((float)$pItem->subtotal, 0, ',', '.') }}
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            @endif
 
             {{-- Totals --}}
             <div style="padding: 0 20px;">
@@ -385,8 +418,18 @@
                 <p class="font-body text-xs tracking-[0.2em] uppercase mb-5" style="color: #B89B6B;">Ringkasan</p>
                 <div class="space-y-3 font-body text-sm">
                     <div class="flex justify-between">
+                        <span style="color: #9C9690;">Layanan ({{ $services->count() }})</span>
+                        <span style="color: #1C1A18;">Rp {{ number_format($services->sum(fn($s) => (float)$s->price * max(1, $s->quantity ?? 1)), 0, ',', '.') }}</span>
+                    </div>
+                    @if($products->isNotEmpty())
+                    <div class="flex justify-between">
+                        <span style="color: #9C9690;">Produk ({{ $products->count() }})</span>
+                        <span style="color: #1C1A18;">Rp {{ number_format($products->sum('subtotal'), 0, ',', '.') }}</span>
+                    </div>
+                    @endif
+                    <div class="flex justify-between pt-1 border-t border-[#EDEAE4]">
                         <span style="color: #9C9690;">Subtotal</span>
-                        <span style="color: #1C1A18;">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
+                        <span style="color: #1C1A18; font-weight: 500;">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
                     </div>
                     @if($discount > 0)
                     <div class="flex justify-between">

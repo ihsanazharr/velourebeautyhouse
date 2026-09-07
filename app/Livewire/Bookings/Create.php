@@ -4,13 +4,17 @@ namespace App\Livewire\Bookings;
 
 use App\Models\Booking;
 use App\Models\BookingCustomer;
+use App\Models\BookingProduct;
 use App\Models\BookingService;
 use App\Models\Customer;
 use App\Models\Employee;
+use App\Models\Invoice;
+use App\Models\Product;
 use App\Models\Service;
+use App\Models\StockMovement;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
-
 
 class Create extends Component
 {
@@ -25,6 +29,12 @@ class Create extends Component
     public array $selected_services = [
         ['service_id' => '', 'employee_id' => '']
     ];
+
+    public array $selected_products = [];
+
+    public string $product_search = '';
+
+    public array $product_suggestions = [];
 
     public string $booking_date = '';
 
@@ -42,6 +52,10 @@ class Create extends Component
                 $this->customer_name = $customer->name;
                 $this->customer_phone = $customer->phone ?? '';
             }
+        }
+
+        if (empty($this->booking_date)) {
+            $this->booking_date = now()->toDateString();
         }
     }
 
@@ -80,6 +94,79 @@ class Create extends Component
         $this->customer_suggestions = [];
     }
 
+    public function updatedProductSearch(): void
+    {
+        if (strlen($this->product_search) >= 1) {
+            $alreadySelected = collect($this->selected_products)->pluck('product_id')->all();
+            $this->product_suggestions = Product::query()
+                ->where('is_active', true)
+                ->where('current_stock', '>', 0)
+                ->whereNotIn('id', $alreadySelected)
+                ->where(function ($q) {
+                    $q->where('name', 'like', '%' . $this->product_search . '%')
+                      ->orWhere('sku', 'like', '%' . $this->product_search . '%');
+                })
+                ->take(8)
+                ->get()
+                ->toArray();
+        } else {
+            $this->product_suggestions = [];
+        }
+    }
+
+    public function addProduct(string $productId): void
+    {
+        $product = Product::find($productId);
+        if (!$product) return;
+
+        foreach ($this->selected_products as $key => $p) {
+            if ($p['product_id'] === $productId) {
+                $this->selected_products[$key]['quantity'] = min(
+                    (int) $product->current_stock,
+                    ((int) ($this->selected_products[$key]['quantity'] ?? 1)) + 1
+                );
+                $this->product_search = '';
+                $this->product_suggestions = [];
+                return;
+            }
+        }
+
+        $this->selected_products[] = [
+            'product_id' => $product->id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'price' => (float) $product->selling_price,
+            'quantity' => 1,
+            'max_stock' => (int) $product->current_stock,
+        ];
+
+        $this->product_search = '';
+        $this->product_suggestions = [];
+    }
+
+    public function removeProduct(int $index): void
+    {
+        unset($this->selected_products[$index]);
+        $this->selected_products = array_values($this->selected_products);
+    }
+
+    public function calculateTotal(): float
+    {
+        $total = 0;
+        foreach ($this->selected_services as $item) {
+            if (!empty($item['service_id'])) {
+                $service = Service::find($item['service_id']);
+                if ($service) {
+                    $total += (float) $service->price;
+                }
+            }
+        }
+        foreach ($this->selected_products as $p) {
+            $total += ((float) ($p['price'] ?? 0)) * max(1, (int) ($p['quantity'] ?? 1));
+        }
+        return $total;
+    }
+
     public function save()
     {
         $validated = $this->validate([
@@ -116,15 +203,28 @@ class Create extends Component
                 'required',
                 'exists:employees,id'
             ],
+            'selected_products' => [
+                'nullable',
+                'array',
+            ],
+            'selected_products.*.product_id' => [
+                'required',
+                'exists:products,id',
+            ],
+            'selected_products.*.quantity' => [
+                'required',
+                'integer',
+                'min:1',
+            ],
         ]);
 
-        $start = \Carbon\Carbon::parse(
+        $start = Carbon::parse(
             $validated['booking_date'] . ' ' . $validated['booking_time']
         );
 
         $services_to_create = [];
         $current_start = $start->copy();
-        $total_price = 0;
+        $services_total = 0;
 
         foreach ($this->selected_services as $index => $item) {
             $service = Service::findOrFail($item['service_id']);
@@ -159,11 +259,40 @@ class Create extends Component
                 'end_time' => $service_end->copy(),
             ];
 
-            $total_price += $service->price;
+            $services_total += $service->price;
             $current_start = $service_end;
         }
 
-        DB::transaction(function () use ($validated, $services_to_create, $start, $current_start, $total_price) {
+        // Validate stock and calculate products
+        $products_to_create = [];
+        $products_total = 0;
+
+        foreach ($this->selected_products as $pIndex => $pItem) {
+            $product = Product::findOrFail($pItem['product_id']);
+            $qty = max(1, (int) $pItem['quantity']);
+
+            if ($product->current_stock < $qty) {
+                $this->addError("selected_products.{$pIndex}.quantity", "Stok produk '{$product->name}' tidak mencukupi (tersisa {$product->current_stock}).");
+                return;
+            }
+
+            $unitPrice = (float) $product->selling_price;
+            $subtotal = $unitPrice * $qty;
+            $products_total += $subtotal;
+
+            $products_to_create[] = [
+                'product' => $product,
+                'product_id' => $product->id,
+                'quantity' => $qty,
+                'unit_price' => $unitPrice,
+                'subtotal' => $subtotal,
+            ];
+        }
+
+        $total_price = $services_total + $products_total;
+        $createdInvoice = null;
+
+        DB::transaction(function () use ($validated, $services_to_create, $products_to_create, $start, $current_start, $total_price, &$createdInvoice) {
             $customerId = $this->customer_id;
 
             if (empty($customerId)) {
@@ -212,18 +341,48 @@ class Create extends Component
                     'end_time' => $sData['end_time'],
                 ]);
             }
+
+            foreach ($products_to_create as $pData) {
+                BookingProduct::create([
+                    'booking_id' => $booking->id,
+                    'product_id' => $pData['product_id'],
+                    'quantity' => $pData['quantity'],
+                    'unit_price' => $pData['unit_price'],
+                    'subtotal' => $pData['subtotal'],
+                ]);
+
+                // Deduct stock
+                $pData['product']->decrement('current_stock', $pData['quantity']);
+
+                StockMovement::create([
+                    'product_id' => $pData['product_id'],
+                    'movement_date' => now()->toDateString(),
+                    'type' => 'out',
+                    'quantity' => $pData['quantity'],
+                    'notes' => 'Penjualan melalui Booking ' . $booking->booking_number,
+                ]);
+            }
+
+            // Create Invoice automatically
+            $createdInvoice = Invoice::create([
+                'invoice_number' => 'INV-' . now()->format('YmdHis'),
+                'booking_id' => $booking->id,
+                'customer_id' => $customerId,
+                'subtotal' => $total_price,
+                'discount' => 0,
+                'grand_total' => $total_price,
+                'payment_status' => 'unpaid',
+            ]);
         });
 
         session()->flash(
             'success',
-            'Booking berhasil dibuat.'
+            'Booking berhasil dibuat. Silakan selesaikan transaksi pembayaran.'
         );
 
-        $routeName = auth()->user()->hasRole('owner') 
-            ? 'owner.bookings.index' 
-            : 'kasir.bookings.index';
+        $routePrefix = auth()->user()->hasRole('owner') ? 'owner' : 'kasir';
 
-        return redirect()->route($routeName);
+        return redirect()->route($routePrefix . '.invoices.show', $createdInvoice->id);
     }
 
     public function render()
@@ -231,7 +390,7 @@ class Create extends Component
         $past_bookings = collect();
         if (!empty($this->customer_id)) {
             $past_bookings = Booking::where('customer_id', $this->customer_id)
-                ->with('services.service', 'services.employee', 'invoice')
+                ->with('services.service', 'services.employee', 'products.product', 'invoice')
                 ->latest()
                 ->get();
         }
