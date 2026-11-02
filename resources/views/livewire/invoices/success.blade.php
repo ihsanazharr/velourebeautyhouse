@@ -151,7 +151,7 @@
         </div>
 
         {{-- Customer Info --}}
-        @if($invoice->customer)
+        @if(($invoice->show_customer_name ?? true) && $invoice->customer && !empty($invoice->customer->name))
         <div style="padding: 0 20px;">
             <div style="border-top: 1px dashed #EDEAE4; margin: 12px 0;"></div>
         </div>

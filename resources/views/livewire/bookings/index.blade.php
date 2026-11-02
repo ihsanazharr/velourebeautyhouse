@@ -97,7 +97,7 @@
                         </td>
 
                         <td class="p-4" style="color:#3A3733;">
-                            {{ $booking->customer?->name }}
+                            {{ $booking->customer?->name ?: '—' }}
                         </td>
 
                         <td class="p-4" style="color:#3A3733;">

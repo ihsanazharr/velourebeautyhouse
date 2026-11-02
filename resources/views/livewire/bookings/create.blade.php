@@ -43,12 +43,12 @@
 
             <div class="mb-6 relative" x-data="{ open: true }" @click.away="open = false">
 
-                <label>Nama Pelanggan (Walk-In / Terdaftar)</label>
+                <label>Nama Pelanggan (Opsional / Walk-In)</label>
 
                 <input
                     type="text"
                     wire:model.live="customer_name"
-                    placeholder="Ketik nama pelanggan..."
+                    placeholder="Ketik nama pelanggan (kosongkan jika tanpa nama)..."
                     @focus="open = true"
                     autocomplete="off"
                 >
@@ -104,6 +104,7 @@
                         Tambah Layanan
                     </button>
                 </div>
+                <x-input-error :messages="$errors->get('selected_services')" class="mb-3" />
 
                 <div class="space-y-4">
                     @foreach($selected_services as $index => $item)
@@ -285,6 +286,7 @@
                         type="date"
                         wire:model="booking_date"
                     >
+                    <x-input-error :messages="$errors->get('booking_date')" class="mt-2" />
 
                 </div>
 
@@ -296,6 +298,7 @@
                         type="time"
                         wire:model="booking_time"
                     >
+                    <x-input-error :messages="$errors->get('booking_time')" class="mt-2" />
 
                 </div>
 

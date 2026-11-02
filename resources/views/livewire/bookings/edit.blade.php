@@ -58,8 +58,9 @@
 
                 <div class="space-y-6">
                     <div>
-                        <label>Customer <span style="color:#B5402C;">*</span></label>
+                        <label>Customer (Opsional / Walk-In)</label>
                         <select wire:model="customer_id">
+                            <option value="">Tanpa Customer / Walk-In</option>
                             @foreach($customers as $customer)
                                 <option value="{{ $customer->id }}">{{ $customer->name }} ({{ $customer->phone ?? '-' }})</option>
                             @endforeach

@@ -22,6 +22,7 @@ class Invoice extends Model
             'discount' => 'decimal:2',
             'grand_total' => 'decimal:2',
             'invoice_sent' => 'boolean',
+            'show_customer_name' => 'boolean',
         ];
     }
 

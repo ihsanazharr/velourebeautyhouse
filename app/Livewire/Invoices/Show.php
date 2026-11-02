@@ -13,6 +13,7 @@ class Show extends Component
     public string $payment_method = 'Cash';
     public $cash_received = 0;
     public $cash_change = 0;
+    public bool $show_customer_name = true;
 
     public function mount(Invoice $invoice): void
     {
@@ -25,9 +26,18 @@ class Show extends Component
             'booking.bookingCustomers.customer',
         ]);
 
+        $this->show_customer_name = (bool) ($this->invoice->show_customer_name ?? ($this->invoice->customer_id ? true : false));
+
         // Default cash received to grand total
         $this->cash_received = (float) $this->invoice->grand_total;
         $this->calculateChange();
+    }
+
+    public function updatedShowCustomerName(): void
+    {
+        $this->invoice->update([
+            'show_customer_name' => $this->show_customer_name,
+        ]);
     }
 
     public function updatedPaymentMethod(): void
@@ -70,6 +80,7 @@ class Show extends Component
             'payment_method' => $this->payment_method,
             'cash_received' => $received,
             'cash_change' => $change,
+            'show_customer_name' => $this->show_customer_name,
         ]);
 
         session()->flash('success', 'Transaksi berhasil dan invoice telah ditandai LUNAS.');

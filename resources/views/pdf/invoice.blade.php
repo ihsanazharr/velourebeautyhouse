@@ -179,12 +179,16 @@
         <tr>
             <td style="border: none; padding: 0; width: 50%; vertical-align: top;">
                 <div class="meta-title">Diterbitkan Untuk:</div>
-                <div class="meta-value" style="font-size: 14px; font-weight: bold; margin-bottom: 2px;">{{ $invoice->customer?->name }}</div>
-                @if($invoice->customer?->phone && $invoice->customer?->phone !== '-')
-                    <div style="font-size: 11px; color: #9C9690;">Telp: {{ $invoice->customer->phone }}</div>
-                @endif
-                @if($invoice->customer?->email)
-                    <div style="font-size: 11px; color: #9C9690;">Email: {{ $invoice->customer->email }}</div>
+                @if(($invoice->show_customer_name ?? true) && $invoice->customer && !empty($invoice->customer->name))
+                    <div class="meta-value" style="font-size: 14px; font-weight: bold; margin-bottom: 2px;">{{ $invoice->customer->name }}</div>
+                    @if($invoice->customer->phone && $invoice->customer->phone !== '-')
+                        <div style="font-size: 11px; color: #9C9690;">Telp: {{ $invoice->customer->phone }}</div>
+                    @endif
+                    @if($invoice->customer->email)
+                        <div style="font-size: 11px; color: #9C9690;">Email: {{ $invoice->customer->email }}</div>
+                    @endif
+                @else
+                    <div class="meta-value" style="font-size: 14px; font-weight: 500; color: #9C9690; margin-bottom: 2px;">—</div>
                 @endif
             </td>
             <td style="border: none; padding: 0; width: 50%; vertical-align: top; text-align: right;">

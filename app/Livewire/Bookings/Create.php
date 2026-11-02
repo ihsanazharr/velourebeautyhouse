@@ -167,11 +167,24 @@ class Create extends Component
         return $total;
     }
 
+    protected $messages = [
+        'customer_name.required' => 'Mohon untuk diisi',
+        'booking_date.required' => 'Mohon untuk diisi',
+        'booking_time.required' => 'Mohon untuk diisi',
+        'selected_services.required' => 'Mohon pilih minimal 1 layanan',
+        'selected_services.min' => 'Mohon pilih minimal 1 layanan',
+        'selected_services.*.service_id.required' => 'Mohon untuk diisi',
+        'selected_services.*.employee_id.required' => 'Mohon untuk diisi',
+        'selected_products.*.product_id.required' => 'Mohon untuk diisi',
+        'selected_products.*.quantity.required' => 'Mohon untuk diisi',
+        'selected_products.*.quantity.min' => 'Jumlah minimal 1',
+    ];
+
     public function save()
     {
         $validated = $this->validate([
             'customer_name' => [
-                'required',
+                'nullable',
                 'string',
                 'max:255',
             ],
@@ -295,20 +308,33 @@ class Create extends Component
         DB::transaction(function () use ($validated, $services_to_create, $products_to_create, $start, $current_start, $total_price, &$createdInvoice) {
             $customerId = $this->customer_id;
 
-            if (empty($customerId)) {
-                $phone = $this->customer_phone ?: '080000000000';
-                $customer = Customer::where('name', $this->customer_name)
-                    ->where('phone', $phone)
-                    ->first();
+            if (!empty($customerId)) {
+                $customerExists = Customer::where('id', $customerId)->exists();
+                if (!$customerExists) {
+                    $customerId = null;
+                }
+            }
+
+            if (empty($customerId) && !empty(trim($this->customer_name ?? ''))) {
+                $trimmedName = trim($this->customer_name);
+                $phone = !empty($this->customer_phone) ? trim($this->customer_phone) : null;
+
+                $query = Customer::where('name', $trimmedName);
+                if ($phone) {
+                    $query->where('phone', $phone);
+                }
+                $customer = $query->first();
 
                 if (!$customer) {
                     $customer = Customer::create([
-                        'name' => $this->customer_name,
+                        'name' => $trimmedName,
                         'phone' => $phone,
                         'is_active' => true,
                     ]);
                 }
                 $customerId = $customer->id;
+            } elseif (empty($customerId)) {
+                $customerId = null;
             }
 
             $booking = Booking::create([
@@ -320,13 +346,15 @@ class Create extends Component
                 'dp_amount' => 0,
                 'total_amount' => $total_price,
                 'status' => 'pending',
-                'notes' => $validated['notes'],
+                'notes' => $validated['notes'] ?? null,
             ]);
 
-            BookingCustomer::create([
-                'booking_id' => $booking->id,
-                'customer_id' => $customerId,
-            ]);
+            if ($customerId) {
+                BookingCustomer::create([
+                    'booking_id' => $booking->id,
+                    'customer_id' => $customerId,
+                ]);
+            }
 
             foreach ($services_to_create as $sData) {
                 BookingService::create([
@@ -368,6 +396,7 @@ class Create extends Component
                 'invoice_number' => 'INV-' . now()->format('YmdHis'),
                 'booking_id' => $booking->id,
                 'customer_id' => $customerId,
+                'show_customer_name' => !empty($customerId),
                 'subtotal' => $total_price,
                 'discount' => 0,
                 'grand_total' => $total_price,

@@ -196,6 +196,20 @@ class Edit extends Component
         return $total;
     }
 
+    protected $messages = [
+        'customer_id.exists' => 'Data customer tidak valid',
+        'status.required' => 'Mohon untuk diisi',
+        'booking_date.required' => 'Mohon untuk diisi',
+        'booking_time.required' => 'Mohon untuk diisi',
+        'selected_services.required' => 'Mohon pilih minimal 1 layanan',
+        'selected_services.min' => 'Mohon pilih minimal 1 layanan',
+        'selected_services.*.service_id.required' => 'Mohon untuk diisi',
+        'selected_services.*.employee_id.required' => 'Mohon untuk diisi',
+        'selected_products.*.product_id.required' => 'Mohon untuk diisi',
+        'selected_products.*.quantity.required' => 'Mohon untuk diisi',
+        'selected_products.*.quantity.min' => 'Jumlah minimal 1',
+    ];
+
     public function save()
     {
         // Sync legacy properties if modified
@@ -212,7 +226,7 @@ class Edit extends Component
 
         $validated = $this->validate([
             'customer_id' => [
-                'required',
+                'nullable',
                 'exists:customers,id',
             ],
             'status' => [
@@ -336,9 +350,10 @@ class Edit extends Component
 
         DB::transaction(function () use ($validated, $services_to_create, $products_to_create, $start, $current_start, $services_total, $products_total, $existingBookingProducts) {
             $grand_total = $services_total + $products_total;
+            $customerId = !empty($validated['customer_id']) ? $validated['customer_id'] : null;
 
             $this->booking->update([
-                'customer_id' => $validated['customer_id'],
+                'customer_id' => $customerId,
                 'status' => $validated['status'],
                 'booking_date' => $validated['booking_date'],
                 'booking_start' => $start,
@@ -347,10 +362,14 @@ class Edit extends Component
                 'notes' => $validated['notes'] ?? null,
             ]);
 
-            BookingCustomer::updateOrCreate(
-                ['booking_id' => $this->booking->id],
-                ['customer_id' => $validated['customer_id']]
-            );
+            if ($customerId) {
+                BookingCustomer::updateOrCreate(
+                    ['booking_id' => $this->booking->id],
+                    ['customer_id' => $customerId]
+                );
+            } else {
+                BookingCustomer::where('booking_id', $this->booking->id)->delete();
+            }
 
             // Re-create booking services
             $this->booking->services()->delete();
@@ -404,7 +423,8 @@ class Edit extends Component
 
             if ($this->booking->invoice) {
                 $this->booking->invoice->update([
-                    'customer_id' => $validated['customer_id'],
+                    'customer_id' => $customerId,
+                    'show_customer_name' => !empty($customerId) ? ($this->booking->invoice->show_customer_name ?? true) : false,
                     'subtotal' => $grand_total,
                     'grand_total' => max(0, $grand_total - (float) $this->booking->invoice->discount),
                 ]);

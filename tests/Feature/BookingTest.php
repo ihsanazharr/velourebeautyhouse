@@ -912,5 +912,130 @@ class BookingTest extends TestCase
             ->assertSee('INV-PAY-01')
             ->assertSee('Rp 120.000');
     }
+
+    public function test_can_create_booking_without_customer_name_and_phone()
+    {
+        $owner = User::factory()->create();
+        $owner->assignRole('owner');
+
+        $employee = Employee::create([
+            'employee_code' => 'EMP-ANON',
+            'full_name' => 'Jane Stylist',
+            'commission_percentage' => 10,
+            'employment_status' => 'active',
+        ]);
+
+        $category = ServiceCategory::create([
+            'name' => 'Hair',
+            'slug' => 'hair-anon',
+            'is_active' => true,
+        ]);
+
+        $service = Service::create([
+            'service_category_id' => $category->id,
+            'name' => 'Haircut',
+            'price' => 75000,
+            'duration_minutes' => 30,
+            'is_active' => true,
+        ]);
+
+        // Create booking without customer_name and without customer_phone
+        Livewire::actingAs($owner)
+            ->test(\App\Livewire\Bookings\Create::class)
+            ->set('customer_name', '')
+            ->set('customer_phone', '')
+            ->set('selected_services', [
+                ['service_id' => $service->id, 'employee_id' => $employee->id]
+            ])
+            ->set('booking_date', now()->toDateString())
+            ->set('booking_time', '11:00')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $booking = Booking::latest()->first();
+        $this->assertNotNull($booking);
+        $this->assertNull($booking->customer_id);
+        $this->assertNull($booking->customer);
+        $this->assertEquals(0, $booking->bookingCustomers()->count());
+
+        $invoice = $booking->invoice;
+        $this->assertNotNull($invoice);
+        $this->assertNull($invoice->customer_id);
+        $this->assertFalse($invoice->show_customer_name);
+    }
+
+    public function test_booking_validation_messages_show_mohon_untuk_diisi()
+    {
+        $owner = User::factory()->create();
+        $owner->assignRole('owner');
+
+        // Test with empty required fields
+        Livewire::actingAs($owner)
+            ->test(\App\Livewire\Bookings\Create::class)
+            ->set('booking_date', '')
+            ->set('booking_time', '')
+            ->set('selected_services', [
+                ['service_id' => '', 'employee_id' => '']
+            ])
+            ->call('save')
+            ->assertHasErrors([
+                'booking_date' => 'Mohon untuk diisi',
+                'booking_time' => 'Mohon untuk diisi',
+                'selected_services.0.service_id' => 'Mohon untuk diisi',
+                'selected_services.0.employee_id' => 'Mohon untuk diisi',
+            ]);
+    }
+
+    public function test_invoice_can_toggle_show_customer_name()
+    {
+        $owner = User::factory()->create();
+        $owner->assignRole('owner');
+
+        $customer = Customer::create([
+            'name' => 'Citra Kirana',
+            'phone' => '081299998888',
+            'is_active' => true,
+        ]);
+
+        $booking = Booking::create([
+            'booking_number' => 'BK-TOGGLE-01',
+            'customer_id' => $customer->id,
+            'booking_date' => now()->toDateString(),
+            'booking_start' => now(),
+            'booking_end' => now()->addHour(),
+            'total_amount' => 100000,
+            'status' => 'pending',
+        ]);
+
+        $invoice = Invoice::create([
+            'invoice_number' => 'INV-TOGGLE-01',
+            'booking_id' => $booking->id,
+            'customer_id' => $customer->id,
+            'show_customer_name' => true,
+            'subtotal' => 100000,
+            'discount' => 0,
+            'grand_total' => 100000,
+            'payment_status' => 'unpaid',
+        ]);
+
+        // Verify initially shown
+        $component = Livewire::actingAs($owner)
+            ->test(\App\Livewire\Invoices\Show::class, ['invoice' => $invoice])
+            ->assertSee('Citra Kirana')
+            ->assertSee('Cantumkan nama pelanggan di invoice/struk');
+
+        // Toggle off
+        $component->set('show_customer_name', false);
+
+        $invoice->refresh();
+        $this->assertFalse((bool) $invoice->show_customer_name);
+        $component->assertDontSee('Citra Kirana');
+
+        // Toggle back on
+        $component->set('show_customer_name', true);
+        $invoice->refresh();
+        $this->assertTrue((bool) $invoice->show_customer_name);
+        $component->assertSee('Citra Kirana');
+    }
 }
 

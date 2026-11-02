@@ -114,7 +114,7 @@
             </div>
 
             {{-- Customer Info --}}
-            @if($invoice->customer)
+            @if($show_customer_name && $invoice->customer && !empty($invoice->customer->name))
             <div style="padding: 0 20px;">
                 <div style="border-top: 1px dashed #EDEAE4; margin: 12px 0;"></div>
             </div>
@@ -411,6 +411,24 @@
                         </button>
                     </form>
                 @endif
+
+                {{-- Opsi Cantumkan Nama Pelanggan --}}
+                <div class="pt-4 mt-4" style="border-top: 1px solid #EDEAE4;">
+                    <label class="flex items-center gap-2.5 cursor-pointer font-body text-xs text-[#1C1A18] select-none">
+                        <input 
+                            type="checkbox" 
+                            wire:model.live="show_customer_name"
+                            class="rounded border-[#EDEAE4] text-[#B89B6B] focus:ring-[#B89B6B] w-4 h-4 cursor-pointer"
+                            @disabled(!$invoice->customer || empty($invoice->customer->name))
+                        >
+                        <span class="font-medium">Cantumkan nama pelanggan di invoice/struk</span>
+                    </label>
+                    @if(!$invoice->customer || empty($invoice->customer->name))
+                        <p class="font-body text-[11px] text-[#9C9690] mt-1 ml-6">
+                            (Booking tanpa nama / Walk-In)
+                        </p>
+                    @endif
+                </div>
             </div>
 
             {{-- Summary Card --}}
