@@ -2,16 +2,17 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/veloureb/public_html
+    - export PHP=/opt/alt/php84/usr/bin/php
     - /bin/rsync -av --exclude='.git' --exclude='.env' --exclude='node_modules' --exclude='tests' $cpanel_source_dir/ $DEPLOYPATH
     - cd $DEPLOYPATH
-    
+
     # 1. Install dependencies composer di server (tanpa package development)
-    - composer install --no-dev --optimize-autoloader
-    
-    # 2. Jalankan migrasi database di server secara otomatis
-    - php artisan migrate --force
-    
+    - $PHP /usr/local/bin/composer install --no-dev --optimize-autoloader
+
+    # 2. Jalankan migrasi database di server secara otomatis (PHP 8.4)
+    - $PHP artisan migrate --force
+
     # 3. Optimasi Cache Laravel untuk Production
-    - php artisan config:cache
-    - php artisan route:cache
-    - php artisan view:cache
+    - $PHP artisan config:cache
+    - $PHP artisan route:cache
+    - $PHP artisan view:cache
